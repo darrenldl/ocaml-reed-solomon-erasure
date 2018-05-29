@@ -75,5 +75,18 @@ let gen_mul_table_half
   for a = 0 to (half_table_length) - 1 do
     for b = 0 to (half_table_length) - 1 do
       let result : int ref = ref 0 in
+      if a = 0 || b = 0 then (
+        let log_a = Char.code (Bytes.get log_table a) in
+        let log_b = Char.code (Bytes.get log_table b) in
+        result := Char.code (Bytes.get exp_table (log_a + log_b));
+      );
+      if b land 0x0F = b then (
+        Bytes.set low  (a * field_size + b) (Char.chr !result);
+      );
+      if b land 0xF0 = b then (
+        Bytes.set high (a * field_size + (b lsr 4)) (Char.chr !result);
+      )
     done
-  done
+  done;
+
+  (low, high)
