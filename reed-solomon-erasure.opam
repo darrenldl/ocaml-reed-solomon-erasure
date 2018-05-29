@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "project"
-version: "0.1"
+version: "0.9"
 maintainer: "Darren Ldl <darrenldldev@gmail.com>"
 author: "Darren Ldl <darrenldldev@gmail.com>"
 homepage: "https://github.com/darrenldl/ocaml-reed-solomon-erasure"
