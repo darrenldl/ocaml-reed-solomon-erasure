@@ -30,8 +30,8 @@ let gen_exp_table (log_tabe : bytes) : bytes =
 
   for i = 1 to (field_size) - 1 do
     let log = int_of_char log_tabe.%[i] in
-    result.%[log]                  <- char_of_int i;
-    result.%[log + field_size - 1] <- char_of_int i;
+    result.%[log]                  <- i |> char_of_int;
+    result.%[log + field_size - 1] <- i |> char_of_int;
   done;
 
   result
@@ -42,13 +42,13 @@ let multiply
     (a : int)
     (b : int)
   : int =
-  if a = 0 && b = 0 then
+  if a = 0 || b = 0 then
     0
   else (
     let log_a = int_of_char log_table.%[a] in
     let log_b = int_of_char log_table.%[b] in
     let log_result = log_a + log_b in
-    int_of_char exp_table.%[log_result]
+    exp_table.%[log_result] |> int_of_char
   )
 
 let gen_mul_table
@@ -56,11 +56,11 @@ let gen_mul_table
     (exp_table : bytes)
   : bytes =
 
-  let result : bytes = Bytes.make (256 * 256) '\x00' in
+  let result : bytes = Bytes.make (field_size * field_size) '\x00' in
 
   for a = 0 to (field_size) - 1 do
     for b = 0 to (field_size) - 1 do
-      result.%[a * 256 + b] <- char_of_int (multiply log_table exp_table a b);
+      result.%[a * 256 + b] <- multiply log_table exp_table a b |> char_of_int;
     done
   done;
 
@@ -70,24 +70,26 @@ let gen_mul_table_half
     (log_table : bytes)
     (exp_table : bytes)
   : bytes * bytes =
-  let half_table_length = 16 * field_size in
+  let half_table_row_count  = field_size in
+  let half_table_col_count  = 16 in
+  let half_table_total_size = half_table_row_count * half_table_col_count in
 
-  let low  : bytes = Bytes.make half_table_length '\x00' in
-  let high : bytes = Bytes.make half_table_length '\x00' in
+  let low  : bytes = Bytes.make half_table_total_size '\x00' in
+  let high : bytes = Bytes.make half_table_total_size '\x00' in
 
-  for a = 0 to (half_table_length) - 1 do
-    for b = 0 to (half_table_length) - 1 do
+  for a = 0 to (half_table_row_count) - 1 do
+    for b = 0 to (half_table_row_count) - 1 do
       let result : int ref = ref 0 in
-      if a = 0 || b = 0 then (
+      if not (a = 0 || b = 0) then (
         let log_a = int_of_char log_table.%[a] in
         let log_b = int_of_char log_table.%[b] in
-        result := int_of_char exp_table.%[log_a + log_b];
+        result := exp_table.%[log_a + log_b] |> int_of_char;
       );
       if b land 0x0F = b then (
-        low.%[a * field_size + b] <- char_of_int !result;
+        low .%[a * half_table_col_count + b]         <- !result |> char_of_int;
       );
       if b land 0xF0 = b then (
-        high.%[a * field_size + (b lsr 4)] <- char_of_int !result;
+        high.%[a * half_table_col_count + (b lsr 4)] <- !result |> char_of_int;
       )
     done
   done;
@@ -98,13 +100,37 @@ let print_tables_debug () : unit =
   let log_table = gen_log_table generating_polynomial in
   let exp_table = gen_exp_table log_table in
   let mul_table = gen_mul_table log_table exp_table in
+  let (mul_table_low, mul_table_high) = gen_mul_table_half log_table exp_table in
 
   print_string "log table : [";
   for i = 0 to (Bytes.length log_table) - 1 do
-    Printf.printf "%d, " (int_of_char log_table.%[i]);
+    Printf.printf "%d, " (log_table.%[i] |> int_of_char);
   done;
   print_endline "]";
 
+  print_string "exp table : [";
+  for i = 0 to (Bytes.length exp_table) - 1 do
+    Printf.printf "%d, " (exp_table.%[i] |> int_of_char);
+  done;
+  print_endline "]";
+
+  print_string "mul table : [";
+  for i = 0 to (Bytes.length mul_table) - 1 do
+    Printf.printf "%d, " (mul_table.%[i] |> int_of_char);
+  done;
+  print_endline "]";
+
+  print_string "mul table low : [";
+  for i = 0 to (Bytes.length mul_table_low) - 1 do
+    Printf.printf "%d, " (mul_table_low.%[i] |> int_of_char);
+  done;
+  print_endline "]";
+
+  print_string "mul table high : [";
+  for i = 0 to (Bytes.length mul_table_high) - 1 do
+    Printf.printf "%d, " (mul_table_high.%[i] |> int_of_char);
+  done;
+  print_endline "]";
 ;;
 
 print_tables_debug ()
