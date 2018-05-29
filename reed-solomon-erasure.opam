@@ -10,7 +10,6 @@ dev-repo: "https://github.com/darrenldl/ocaml-reed-solomon-erasure.git"
 build: [
   ["jbuilder" "build" "@install"]
 ]
-install: [make "install"]
 depends: [
   "jbuilder" (build)
 ]
