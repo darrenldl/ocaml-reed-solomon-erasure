@@ -154,19 +154,21 @@ let write_1D_table (oc : out_channel) (name : string) (table : bytes) : unit =
   for i = 0 to (Bytes.length table) - 1 do
     fprintf oc "\\%03d" (table.%[i] |> int_of_char)
   done;
-  fprintf oc "\";;"
+  fprintf oc "\"\n"
 
 let write_2D_table (oc : out_channel) (name : string) (table : bytes array) : unit =
   let rows = Array.length table in
   let cols = Bytes.length table.(0) in
 
-  fprintf oc "let %s : string array =\"" name;
+  fprintf oc "let %s : string array =[|" name;
   for i = 0 to rows - 1 do
+    fprintf oc "\"";
     for j = 0 to cols - 1 do
       fprintf oc "\\%03d" (table.(i).%[j] |> int_of_char);
-    done
+    done;
+    fprintf oc "\";\n";
   done;
-  fprintf oc "\";;"
+  fprintf oc "|]\n"
 
 let main () =
   let log_table = gen_log_table generating_polynomial in
@@ -176,9 +178,13 @@ let main () =
 
   let oc = open_out "tables.ml" in
 
-  write_1D_table oc "log_table" log_table;
-  write_1D_table oc "exp_table" exp_table
+  write_1D_table oc "log_table"      log_table;
+  write_1D_table oc "exp_table"      exp_table;
+  write_2D_table oc "mul_table"      mul_table;
+  write_2D_table oc "mul_table_low"  mul_table_low;
+  write_2D_table oc "mul_table_high" mul_table_high;
 
+  close_out oc
 ;;
 
 main ()
