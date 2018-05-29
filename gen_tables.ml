@@ -12,7 +12,7 @@ let gen_log_table (polynomial : int) : bytes =
   let b      : int ref = ref 1 in
 
   for log = 0 to (field_size-1) - 1 do
-    Bytes.set result !b (char_of_int log);
+    result.%[!b] <- (char_of_int log);
 
     b := !b lsl 1;
 
@@ -60,7 +60,7 @@ let gen_mul_table
 
   for a = 0 to (field_size) - 1 do
     for b = 0 to (field_size) - 1 do
-      Bytes.set result (a * 256 + b) (char_of_int (multiply log_table exp_table a b))
+      result.%[a * 256 + b] <- char_of_int (multiply log_table exp_table a b);
     done
   done;
 
@@ -79,15 +79,15 @@ let gen_mul_table_half
     for b = 0 to (half_table_length) - 1 do
       let result : int ref = ref 0 in
       if a = 0 || b = 0 then (
-        let log_a = int_of_char (Bytes.get log_table a) in
-        let log_b = int_of_char (Bytes.get log_table b) in
-        result := int_of_char (Bytes.get exp_table (log_a + log_b));
+        let log_a = int_of_char log_table.%[a] in
+        let log_b = int_of_char log_table.%[b] in
+        result := int_of_char exp_table.%[log_a + log_b];
       );
       if b land 0x0F = b then (
-        Bytes.set low  (a * field_size + b) (char_of_int !result);
+        low.%[a * field_size + b] <- char_of_int !result;
       );
       if b land 0xF0 = b then (
-        Bytes.set high (a * field_size + (b lsr 4)) (char_of_int !result);
+        high.%[a * field_size + (b lsr 4)] <- char_of_int !result;
       )
     done
   done;
