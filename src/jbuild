@@ -3,3 +3,8 @@
 (library
  ((name        reed_solomon_erasure)
   (public_name reed-solomon-erasure)))
+
+(rule
+ ((targets (tables.ml))
+  (deps    (../generator/gen_tables.ml))
+  (action  (run ${<} -o ${@}))))
