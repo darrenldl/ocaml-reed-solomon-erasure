@@ -17,7 +17,7 @@ let gen_log_table (polynomial : int) : bytes =
     b := !b lsl 1;
 
     if field_size <= !b then (
-      b := (!b - field_size) land polynomial;
+      b := (!b - field_size) lxor polynomial;
     )
   done;
 
@@ -93,3 +93,18 @@ let gen_mul_table_half
   done;
 
   (low, high)
+
+let print_tables_debug () : unit =
+  let log_table = gen_log_table generating_polynomial in
+  let exp_table = gen_exp_table log_table in
+  let mul_table = gen_mul_table log_table exp_table in
+
+  print_string "log table : [";
+  for i = 0 to (Bytes.length log_table) - 1 do
+    Printf.printf "%d, " (int_of_char log_table.%[i]);
+  done;
+  print_endline "]";
+
+;;
+
+print_tables_debug ()
