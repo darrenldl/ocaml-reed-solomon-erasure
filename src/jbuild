@@ -1,0 +1,5 @@
+(jbuild_version 1)
+
+(library
+ ((name        reed_solomon_erasure)
+  (public_name reed-solomon-erasure)))
