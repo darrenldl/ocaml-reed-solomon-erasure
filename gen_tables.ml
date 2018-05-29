@@ -4,6 +4,9 @@ let field_size : int = 256
 
 let generating_polynomial : int = 29
 
+let ( .%[]   ) = Bytes.get
+let ( .%[]<- ) = Bytes.set
+
 let gen_log_table (polynomial : int) : bytes =
   let result : bytes   = Bytes.make field_size '\x00' in
   let b      : int ref = ref 1 in
@@ -26,9 +29,9 @@ let gen_exp_table (log_tabe : bytes) : bytes =
   let result : bytes = Bytes.make exp_table_size '\x00' in
 
   for i = 1 to (field_size) - 1 do
-    let log = Char.code (Bytes.get log_tabe i) in
-    Bytes.set result log                    (Char.chr i);
-    Bytes.set result (log + field_size - 1) (Char.chr i);
+    let log = Char.code log_tabe.%[i] in
+    result.%[log]                  <- Char.chr i;
+    result.%[log + field_size - 1] <- Char.chr i;
   done;
 
   result
