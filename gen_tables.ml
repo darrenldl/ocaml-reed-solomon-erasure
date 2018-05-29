@@ -1,5 +1,7 @@
 #! /usr/bin/env ocaml
 
+open Printf
+
 let field_size : int = 256
 
 let generating_polynomial : int = 29
@@ -54,13 +56,14 @@ let multiply
 let gen_mul_table
     (log_table : bytes)
     (exp_table : bytes)
-  : bytes =
+  : bytes array =
 
-  let result : bytes = Bytes.make (field_size * field_size) '\x00' in
+  let result : bytes array = Array.make field_size (Bytes.make 0 '\x00') in
 
   for a = 0 to (field_size) - 1 do
+    result.(a) <- Bytes.make field_size '\x00';
     for b = 0 to (field_size) - 1 do
-      result.%[a * 256 + b] <- multiply log_table exp_table a b |> char_of_int;
+      result.(a).%[b] <- multiply log_table exp_table a b |> char_of_int;
     done
   done;
 
@@ -69,15 +72,17 @@ let gen_mul_table
 let gen_mul_table_half
     (log_table : bytes)
     (exp_table : bytes)
-  : bytes * bytes =
+  : bytes array * bytes array =
   let half_table_row_count  = field_size in
   let half_table_col_count  = 16 in
-  let half_table_total_size = half_table_row_count * half_table_col_count in
 
-  let low  : bytes = Bytes.make half_table_total_size '\x00' in
-  let high : bytes = Bytes.make half_table_total_size '\x00' in
+  let low  : bytes array = Array.make half_table_row_count (Bytes.make 0 '\x00') in
+  let high : bytes array = Array.make half_table_row_count (Bytes.make 0 '\x00') in
 
   for a = 0 to (half_table_row_count) - 1 do
+    low .(a) <- Bytes.make half_table_col_count '\x00';
+    high.(a) <- Bytes.make half_table_col_count '\x00';
+
     for b = 0 to (half_table_row_count) - 1 do
       let result : int ref = ref 0 in
       if not (a = 0 || b = 0) then (
@@ -86,10 +91,10 @@ let gen_mul_table_half
         result := exp_table.%[log_a + log_b] |> int_of_char;
       );
       if b land 0x0F = b then (
-        low .%[a * half_table_col_count + b]         <- !result |> char_of_int;
+        low .(a).%[b]       <- !result |> char_of_int;
       );
       if b land 0xF0 = b then (
-        high.%[a * half_table_col_count + (b lsr 4)] <- !result |> char_of_int;
+        high.(a).%[b lsr 4] <- !result |> char_of_int;
       )
     done
   done;
@@ -104,33 +109,76 @@ let print_tables_debug () : unit =
 
   print_string "log table : [";
   for i = 0 to (Bytes.length log_table) - 1 do
-    Printf.printf "%d, " (log_table.%[i] |> int_of_char);
+    printf "%d, " (log_table.%[i] |> int_of_char);
   done;
   print_endline "]";
 
   print_string "exp table : [";
   for i = 0 to (Bytes.length exp_table) - 1 do
-    Printf.printf "%d, " (exp_table.%[i] |> int_of_char);
+    printf "%d, " (exp_table.%[i] |> int_of_char);
   done;
   print_endline "]";
 
   print_string "mul table : [";
-  for i = 0 to (Bytes.length mul_table) - 1 do
-    Printf.printf "%d, " (mul_table.%[i] |> int_of_char);
+  for i = 0 to (Array.length mul_table) - 1 do
+    print_string "[";
+    for j = 0 to (Bytes.length mul_table.(i)) - 1 do
+      printf "%d, " (mul_table.(i).%[j] |> int_of_char);
+    done;
+    print_endline "],";
   done;
   print_endline "]";
 
   print_string "mul table low : [";
-  for i = 0 to (Bytes.length mul_table_low) - 1 do
-    Printf.printf "%d, " (mul_table_low.%[i] |> int_of_char);
+  for i = 0 to (Array.length mul_table_low) - 1 do
+    print_string "[";
+    for j = 0 to (Bytes.length mul_table_low.(i)) - 1 do
+      printf "%d, " (mul_table_low.(i).%[j] |> int_of_char);
+    done;
+    print_endline "],";
   done;
   print_endline "]";
 
   print_string "mul table high : [";
-  for i = 0 to (Bytes.length mul_table_high) - 1 do
-    Printf.printf "%d, " (mul_table_high.%[i] |> int_of_char);
+  for i = 0 to (Array.length mul_table_high) - 1 do
+    print_string "[";
+    for j = 0 to (Bytes.length mul_table_high.(i)) - 1 do
+      printf "%d, " (mul_table_high.(i).%[j] |> int_of_char);
+    done;
+    print_endline "],";
   done;
-  print_endline "]";
+  print_endline "]"
+
+let write_1D_table (oc : out_channel) (name : string) (table : bytes) : unit =
+  fprintf oc "let %s : string = \"" name;
+  for i = 0 to (Bytes.length table) - 1 do
+    fprintf oc "\\%03d" (table.%[i] |> int_of_char)
+  done;
+  fprintf oc "\";;"
+
+let write_2D_table (oc : out_channel) (name : string) (table : bytes array) : unit =
+  let rows = Array.length table in
+  let cols = Bytes.length table.(0) in
+
+  fprintf oc "let %s : string array =\"" name;
+  for i = 0 to rows - 1 do
+    for j = 0 to cols - 1 do
+      fprintf oc "\\%03d" (table.(i).%[j] |> int_of_char);
+    done
+  done;
+  fprintf oc "\";;"
+
+let main () =
+  let log_table = gen_log_table generating_polynomial in
+  let exp_table = gen_exp_table log_table in
+  let mul_table = gen_mul_table log_table exp_table in
+  let (mul_table_low, mul_table_high) = gen_mul_table_half log_table exp_table in
+
+  let oc = open_out "tables.ml" in
+
+  write_1D_table oc "log_table" log_table;
+  write_1D_table oc "exp_table" exp_table
+
 ;;
 
-print_tables_debug ()
+main ()
