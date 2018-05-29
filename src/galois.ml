@@ -1,6 +1,5 @@
 open Tables
 open Ops
-open Data_type
 
 let add (a : char) (b : char) : char =
   ((int_of_char a) lxor (int_of_char b)) |> char_of_int
@@ -15,7 +14,7 @@ let div (a : char) (b : char) : char =
   if      (int_of_char a) = 0 then
     char_of_int 0
   else if (int_of_char b) = 0 then
-    raise (Failure "Divisor is 0")
+    failwith "Divisor is 0"
   else (
     let log_a = log_table.%(a |> int_of_char) |> int_of_char in
     let log_b = log_table.%(b |> int_of_char) |> int_of_char in
@@ -41,4 +40,13 @@ let exp (a : char) (n : int) : char =
 
 let pure_ocaml_unroll = 4
 
-(* let mul_slice_pure_ocaml (c : char) (input : bytes)  *)
+let mul_slice_pure_ocaml (c : char) (input : Data.t) (out : Data.t) =
+  let mt = mul_table.(int_of_char c) in
+
+  assert (Data.length input = Data.length out);
+
+  let len = Data.length input in
+
+  if len > 0 then (
+    let input = 
+  )
