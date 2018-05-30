@@ -81,7 +81,8 @@ let multiply (lhs : matrix) (rhs : matrix) : matrix =
       let v = ref 0 in
       for i = 0 to (lhs.col_count) - 1 do
         v := (Galois.mul lhs.&{r,i} rhs.&{i,c} |> int_of_char) lxor !v;
-      done
+      done;
+      result.&{r,c} <- !v |> char_of_int;
     done
   done;
 
