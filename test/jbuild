@@ -3,7 +3,8 @@
 (executable
  ((name matrix_tests)
   (libraries (reed-solomon-erasure
-              oUnit))
+              oUnit
+              qcheck))
  ))
 
 (alias

@@ -12,5 +12,6 @@ build: [
 ]
 depends: [
   "jbuilder" {build}
-  "ounit"
+  "ounit" {build}
+  "qcheck" {build}
 ]
