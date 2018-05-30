@@ -5,11 +5,14 @@ type error = SingularMatrix
 type matrix = {
   row_count : int;
   col_count : int;
-  data      : string array;
+  data      : bytes array;
 }
 
-let ( .%{}   ) = fun m (x,y)   -> m.data.%[x * m.col_count + y]
-let ( .%{}<- ) = fun m (x,y) v -> m.data.%[x * m.col_count + y] <- v
+let ( .%{}   ) = fun m (x,y)   -> m.(x).%[y]
+let ( .%{}<- ) = fun m (x,y) v -> m.(x).%[y] <- v
+
+let ( .&{}   ) = fun m (x,y)   -> m.data.%{x,y}
+let ( .&{}<- ) = fun m (x,y) v -> m.data.%{x,y} <- v
 
 let calc_row_start_end (m : matrix) (col_count : int) (row : int) : int * int =
   let start = row * m.col_count in
@@ -17,8 +20,12 @@ let calc_row_start_end (m : matrix) (col_count : int) (row : int) : int * int =
 
   (start, e)
 
+let make_bytes_array (rows : int) (cols : int) : bytes array =
+  let data = Array.make rows (Bytes.empty) in
+  Array.map (fun _ -> Bytes.make cols '\x00') data
+
 let make (rows : int) (cols : int) : matrix =
-  let data = Bytes.make (rows * cols) '\x00' in
+  let data = make_bytes_array rows cols in
 
   { row_count = rows;
     col_count = cols;
@@ -33,11 +40,11 @@ let make_with_data (init_data : bytes array) : matrix =
       failwith "Inconsistent row sizes"
   done;
 
-  let data = Bytes.make (rows * cols) '\x00' in
+  let data = make_bytes_array rows cols in
 
   for r = 0 to (rows) - 1 do
     for c = 0 to (cols) - 1 do
-      data.%[r * cols + c] <- init_data.(r).%[c]
+      data.%{r,c} <- init_data.(r).%[c]
     done
   done;
 
@@ -49,7 +56,7 @@ let identity (size : int) : matrix =
   let result = make size size in
 
   for i = 0 to (size) - 1 do
-    result.%{i,i} <- 1 |> char_of_int;
+    result.&{i,i} <- 1 |> char_of_int;
   done;
 
   result
@@ -61,10 +68,10 @@ let row_count (m : matrix) : int =
   m.row_count
 
 let get (m : matrix) (r : int) (c : int) : char =
-  m.%{r,c}
+  m.&{r,c}
 
 let set (m : matrix) (r : int) (c : int) (v : char) : unit =
-  m.%{r,c} <- v
+  m.&{r,c} <- v
 
 let multiply (lhs : matrix) (rhs : matrix) : matrix =
   if lhs.col_count <> rhs.col_count then
@@ -76,7 +83,7 @@ let multiply (lhs : matrix) (rhs : matrix) : matrix =
     for c = 0 to (rhs.col_count) - 1 do
       let v = ref 0 in
       for i = 0 to (lhs.col_count) - 1 do
-        v := (Galois.mul lhs.%{r,i} rhs.%{i,c} |> int_of_char) lxor !v;
+        v := (Galois.mul lhs.&{r,i} rhs.&{i,c} |> int_of_char) lxor !v;
       done
     done
   done;
@@ -91,11 +98,11 @@ let augment (lhs : matrix) (rhs : matrix) : matrix =
 
   for r = 0 to (lhs.row_count) - 1 do
     for c = 0 to (lhs.col_count) - 1 do
-      result.%{r,c} <- lhs.%{r,c};
+      result.&{r,c} <- lhs.&{r,c};
     done;
     let lhs_col_count = lhs.col_count in
     for c = 0 to (rhs.col_count) - 1 do
-      result.%{r,lhs_col_count + c} <- rhs.%{r,c};
+      result.&{r,lhs_col_count + c} <- rhs.&{r,c};
     done
   done;
 
@@ -112,10 +119,11 @@ let sub_matrix
 
   for r = rmin to (rmax) - 1 do
     for c = cmin to (cmax) - 1 do
-      result.%{r - rmin, c - cmin} <- m.%{r,c};
+      result.&{r - rmin, c - cmin} <- m.&{r,c};
     done
   done;
 
   result
 
-let get_row (m : matrix) (row : int) : bytes
+let get_row (m : matrix) (row : int) : bytes =
+  m.data.(row)
