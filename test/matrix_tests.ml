@@ -98,16 +98,47 @@ let test_matrix_multiply test_ctxt =
                                 Bytes.of_string "\019\042"|] in
   assert_equal actual expect
 
+let test_matrix_inverse_pass_cases test_ctxt =
+  begin
+    let m =
+      match invert (make_with_data [|Bytes.of_string "\056\023\098";
+                                     Bytes.of_string "\003\100\200";
+                                     Bytes.of_string "\045\201\123"|]) with
+      | Ok(m)    -> m
+      | Error(e) -> failwith "Error" in
+    let expect = make_with_data [|Bytes.of_string "\175\133\33";
+                                  Bytes.of_string "\132\013\245";
+                                  Bytes.of_string "\112\035\126"|] in
+    assert_equal m expect
+  end;
+  begin
+    let m =
+      match invert (make_with_data [|Bytes.of_string "\001\000\000\000\000";
+                                     Bytes.of_string "\000\001\000\000\000";
+                                     Bytes.of_string "\000\000\000\001\000";
+                                     Bytes.of_string "\000\000\000\000\001";
+                                     Bytes.of_string "\007\007\006\006\001"|]) with
+      | Ok(m)    -> m
+      | Error(e) -> failwith "Error" in
+    let expect = make_with_data [|Bytes.of_string "\001\000\000\000\000";
+                                  Bytes.of_string "\000\001\000\000\000";
+                                  Bytes.of_string "\123\123\001\122\122";
+                                  Bytes.of_string "\000\000\001\000\000";
+                                  Bytes.of_string "\000\000\000\001\000"|] in
+    assert_equal m expect
+  end
+
 let suite =
   "matrix_tests">:::
-  ["test_matrix_col_count">::       test_matrix_col_count;
-   "test_matrix_row_count">::       test_matrix_row_count;
-   "test_matrix_swap_rows">::       test_matrix_swap_rows;
-   "test_inconsistent_row_sizes">:: test_inconsistent_row_sizes;
-   "test_incompatible_multiply">::  test_incompatible_multiply;
-   "test_incompatible_augment">::   test_incompatible_augment;
-   "test_matrix_identity">::        test_matrix_identity;
-   "test_matrix_multiply">::        test_matrix_multiply;
+  ["test_matrix_col_count">::          test_matrix_col_count;
+   "test_matrix_row_count">::          test_matrix_row_count;
+   "test_matrix_swap_rows">::          test_matrix_swap_rows;
+   "test_inconsistent_row_sizes">::    test_inconsistent_row_sizes;
+   "test_incompatible_multiply">::     test_incompatible_multiply;
+   "test_incompatible_augment">::      test_incompatible_augment;
+   "test_matrix_identity">::           test_matrix_identity;
+   "test_matrix_multiply">::           test_matrix_multiply;
+   "test_matrix_inverse_pass_cases">:: test_matrix_inverse_pass_cases;
   ]
 
 let () =
