@@ -106,8 +106,8 @@ let test_matrix_inverse_pass_cases test_ctxt =
                                      Bytes.of_string "\045\201\123"|]) with
       | Ok(m)    -> m
       | Error(e) -> failwith "Error" in
-    let expect = make_with_data [|Bytes.of_string "\175\133\33";
-                                  Bytes.of_string "\132\013\245";
+    let expect = make_with_data [|Bytes.of_string "\175\133\033";
+                                  Bytes.of_string "\130\013\245";
                                   Bytes.of_string "\112\035\126"|] in
     assert_equal m expect
   end;
@@ -119,7 +119,7 @@ let test_matrix_inverse_pass_cases test_ctxt =
                                      Bytes.of_string "\000\000\000\000\001";
                                      Bytes.of_string "\007\007\006\006\001"|]) with
       | Ok(m)    -> m
-      | Error(e) -> failwith "Error" in
+      | Error(e) -> assert_failure "Inversion failed" in
     let expect = make_with_data [|Bytes.of_string "\001\000\000\000\000";
                                   Bytes.of_string "\000\001\000\000\000";
                                   Bytes.of_string "\123\123\001\122\122";
@@ -127,6 +127,21 @@ let test_matrix_inverse_pass_cases test_ctxt =
                                   Bytes.of_string "\000\000\000\001\000"|] in
     assert_equal m expect
   end
+
+let test_matrix_inverse_non_square test_ctxt =
+  try
+    invert (make_with_data [|Bytes.of_string "\056\023";
+                             Bytes.of_string "\003\100";
+                             Bytes.of_string "\045\201"|]) |> ignore;
+    assert_failure "Missing exception"
+  with
+  | Failure _ -> ()
+
+let test_matrix_inverse_singular test_ctxt =
+  match invert (make_with_data [|Bytes.of_string "\004\002";
+                                 Bytes.of_string "\012\006"|]) with
+  | Ok _    -> assert_failure "Failed to detect fail case"
+  | Error _ -> ()
 
 let suite =
   "matrix_tests">:::
@@ -139,6 +154,8 @@ let suite =
    "test_matrix_identity">::           test_matrix_identity;
    "test_matrix_multiply">::           test_matrix_multiply;
    "test_matrix_inverse_pass_cases">:: test_matrix_inverse_pass_cases;
+   "test_matrix_inverse_non_square">:: test_matrix_inverse_non_square;
+   "test_matrix_inverse_singular">::   test_matrix_inverse_singular;
   ]
 
 let () =
