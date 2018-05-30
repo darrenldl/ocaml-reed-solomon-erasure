@@ -67,6 +67,9 @@ let get (m : matrix) (r : int) (c : int) : char =
 let set (m : matrix) (r : int) (c : int) (v : char) : unit =
   m.&{r,c} <- v
 
+let copy (m : matrix) : matrix =
+  make_with_data (Array.map (fun x -> Bytes.copy x) m.data)
+
 let multiply (lhs : matrix) (rhs : matrix) : matrix =
   if lhs.col_count <> rhs.col_count then
     failwith (Printf.sprintf "Colomn count on left is different from row count on right, lhs : %d, rhs : %d" lhs.col_count rhs.col_count);
@@ -123,9 +126,7 @@ let get_row (m : matrix) (row : int) : bytes =
   m.data.(row)
 
 let swap_rows (m : matrix) (r1 : int) (r2 : int) : unit =
-  if r1 = r2 then
-    ()
-  else (
+  if r1 <> r2 then (
     let row1 = m.data.(r1) in
     let row2 = m.data.(r2) in
 

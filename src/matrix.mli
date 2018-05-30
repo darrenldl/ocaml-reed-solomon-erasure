@@ -24,6 +24,8 @@ val get : matrix -> int -> int -> char
 
 val set : matrix -> int -> int -> char -> unit
 
+val copy : matrix -> matrix
+
 val multiply : matrix -> matrix -> matrix
 
 val augment : matrix -> matrix -> matrix
