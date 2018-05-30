@@ -119,3 +119,7 @@ let slice_xor (input : Data.t) (out : bytes) : unit =
       n := !n + 1;
     done
   )
+
+let mul_slice = mul_slice_pure_ocaml
+
+let mul_slice_xor = mul_slice_xor_pure_ocaml
