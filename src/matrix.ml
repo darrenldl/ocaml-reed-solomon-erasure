@@ -53,3 +53,32 @@ let identity (size : int) : matrix =
   done;
 
   result
+
+let col_count (m : matrix) : int =
+  m.col_count
+
+let row_count (m : matrix) : int =
+  m.row_count
+
+let get (m : matrix) (r : int) (c : int) : char =
+  m.%{r,c}
+
+let set (m : matrix) (r : int) (c : int) (v : char) : unit =
+  m.%{r,c} <- v
+
+let multiply (lhs : matrix) (rhs : matrix) : matrix =
+  if lhs.col_count <> rhs.col_count then (
+    failwith (Printf.sprintf "Colomn count on left is different from row count on right, lhs : %d, rhs : %d" lhs.col_count rhs.col_count)
+  );
+  let result = make lhs.row_count rhs.col_count in
+
+  for r = 0 to (lhs.row_count) - 1 do
+    for c = 0 to (rhs.col_count) - 1 do
+      let v = ref 0 in
+      for i = 0 to (lhs.col_count) - 1 do
+        v := (Galois.mul lhs.%{r, i} rhs.%{i, c} |> int_of_char) lxor !v;
+      done
+    done
+  done;
+
+  result
