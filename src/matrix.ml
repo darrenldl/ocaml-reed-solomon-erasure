@@ -14,12 +14,6 @@ let ( .%{}<- ) = fun m (x,y) v -> m.(x).%[y] <- v
 let ( .&{}   ) = fun m (x,y)   -> m.data.%{x,y}
 let ( .&{}<- ) = fun m (x,y) v -> m.data.%{x,y} <- v
 
-let calc_row_start_end (m : matrix) (col_count : int) (row : int) : int * int =
-  let start = row * m.col_count in
-  let e     = start + m.col_count in
-
-  (start, e)
-
 let make_bytes_array (rows : int) (cols : int) : bytes array =
   let data = Array.make rows (Bytes.empty) in
   Array.map (fun _ -> Bytes.make cols '\x00') data
@@ -127,3 +121,14 @@ let sub_matrix
 
 let get_row (m : matrix) (row : int) : bytes =
   m.data.(row)
+
+let swap_rows (m : matrix) (r1 : int) (r2 : int) : unit =
+  if r1 = r2 then
+    ()
+  else (
+    let row1 = m.data.(r1) in
+    let row2 = m.data.(r2) in
+
+    m.data.(r1) <- row2;
+    m.data.(r2) <- row1
+  )
