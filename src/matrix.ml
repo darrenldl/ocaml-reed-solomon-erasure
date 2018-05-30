@@ -218,3 +218,14 @@ let invert (m : matrix) : (matrix, error) result =
     | Ok(())        -> Ok(sub_matrix work 0 row_count col_count (col_count * 2))
     | Error(_) as e -> e
   )
+
+let vandermonde (rows : int) (cols : int) : matrix =
+  let result = make rows cols in
+
+  for r = 0 to (rows) - 1 do
+    for c = 0 to (cols) - 1 do
+      result.&{r,c} <- Galois.exp (r |> char_of_int) c;
+    done
+  done;
+
+  result
