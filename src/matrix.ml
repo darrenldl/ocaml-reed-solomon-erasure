@@ -204,3 +204,17 @@ let gaussian_elim (m : matrix) : (unit, error) result =
       done;
       Ok(())
     end
+
+let invert (m : matrix) : (matrix, error) result =
+  if not (is_square m) then
+    failwith "Trying to invert a non-square matrix"
+  else (
+    let row_count = m.row_count in
+    let col_count = m.col_count in
+
+    let work = augment m (identity row_count) in
+
+    match gaussian_elim work with
+    | Ok(())        -> Ok(sub_matrix work 0 row_count col_count (col_count * 2))
+    | Error(_) as e -> e
+  )
