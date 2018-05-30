@@ -5,7 +5,7 @@ type error = SingularMatrix
 type matrix = {
   row_count : int;
   col_count : int;
-  data      : bytes;
+  data      : string array;
 }
 
 let ( .%{}   ) = fun m (x,y)   -> m.data.%[x * m.col_count + y]
@@ -67,18 +67,55 @@ let set (m : matrix) (r : int) (c : int) (v : char) : unit =
   m.%{r,c} <- v
 
 let multiply (lhs : matrix) (rhs : matrix) : matrix =
-  if lhs.col_count <> rhs.col_count then (
-    failwith (Printf.sprintf "Colomn count on left is different from row count on right, lhs : %d, rhs : %d" lhs.col_count rhs.col_count)
-  );
+  if lhs.col_count <> rhs.col_count then
+    failwith (Printf.sprintf "Colomn count on left is different from row count on right, lhs : %d, rhs : %d" lhs.col_count rhs.col_count);
+
   let result = make lhs.row_count rhs.col_count in
 
   for r = 0 to (lhs.row_count) - 1 do
     for c = 0 to (rhs.col_count) - 1 do
       let v = ref 0 in
       for i = 0 to (lhs.col_count) - 1 do
-        v := (Galois.mul lhs.%{r, i} rhs.%{i, c} |> int_of_char) lxor !v;
+        v := (Galois.mul lhs.%{r,i} rhs.%{i,c} |> int_of_char) lxor !v;
       done
     done
   done;
 
   result
+
+let augment (lhs : matrix) (rhs : matrix) : matrix =
+  if lhs.row_count <> rhs.row_count then
+    failwith (Printf.sprintf "Matrices do not have the same row count, lhs : %d, rhs : %d" lhs.row_count rhs.row_count);
+
+  let result = make lhs.row_count (lhs.col_count + rhs.col_count) in
+
+  for r = 0 to (lhs.row_count) - 1 do
+    for c = 0 to (lhs.col_count) - 1 do
+      result.%{r,c} <- lhs.%{r,c};
+    done;
+    let lhs_col_count = lhs.col_count in
+    for c = 0 to (rhs.col_count) - 1 do
+      result.%{r,lhs_col_count + c} <- rhs.%{r,c};
+    done
+  done;
+
+  result
+
+let sub_matrix
+    (m    : matrix)
+    (rmin : int)
+    (cmin : int)
+    (rmax : int)
+    (cmax : int)
+  : matrix =
+  let result = make (rmax - rmin) (cmax - cmin) in
+
+  for r = rmin to (rmax) - 1 do
+    for c = cmin to (cmax) - 1 do
+      result.%{r - rmin, c - cmin} <- m.%{r,c};
+    done
+  done;
+
+  result
+
+let get_row (m : matrix) (row : int) : bytes
