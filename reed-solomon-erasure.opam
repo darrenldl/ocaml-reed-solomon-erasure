@@ -11,5 +11,6 @@ build: [
   ["jbuilder" "build" "@install"]
 ]
 depends: [
-  "jbuilder" (build)
+  "jbuilder" {build}
+  "ounit"
 ]
