@@ -8,6 +8,9 @@ type matrix = {
   data      : bytes;
 }
 
+let ( .%{}   ) = fun m (x,y)   -> m.data.%[x * m.col_count + y]
+let ( .%{}<- ) = fun m (x,y) v -> m.data.%[x * m.col_count + y] <- v
+
 let calc_row_start_end (m : matrix) (col_count : int) (row : int) : int * int =
   let start = row * m.col_count in
   let e     = start + m.col_count in
@@ -42,3 +45,11 @@ let make_with_data (init_data : bytes array) : matrix =
     col_count = cols;
     data              }
 
+let identity (size : int) : matrix =
+  let result = make size size in
+
+  for i = 0 to (size) - 1 do
+    result.%{i,i} <- 1 |> char_of_int;
+  done;
+
+  result
