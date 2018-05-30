@@ -132,3 +132,75 @@ let swap_rows (m : matrix) (r1 : int) (r2 : int) : unit =
     m.data.(r1) <- row2;
     m.data.(r2) <- row1
   )
+
+let is_square (m : matrix) : bool =
+  m.row_count = m.col_count
+
+let gaussian_elim (m : matrix) : (unit, error) result =
+  let char_0 = char_of_int 0 in
+  let char_1 = char_of_int 1 in
+
+  let rec do_swaps (r : int) ?(r_below : int = r + 1) (m : matrix) : unit =
+    if r_below < m.row_count then (
+      if m.&{r_below, r} <> char_0 then
+        swap_rows m r r_below
+      else
+        do_swaps r ~r_below:(r_below + 1) m;
+    )
+  in
+
+  let rec loop ?(r : int = 0) (row_count : int) (m : matrix) : (unit, error) result =
+    if r < row_count then (
+      if m.&{r,r} = char_0 then
+        do_swaps r m;
+      (* If we couldn't find one, the matrix is singular. *)
+      if m.&{r,r} = char_0 then
+        Error (SingularMatrix)
+      else (
+        (* Scale to 1. *)
+        if m.&{r,r} <> char_1 then (
+          let scale = Galois.div char_1 m.&{r,r} in
+          for c = 0 to (m.col_count) - 1 do
+            m.&{r,c} <- Galois.mul m.&{r,c} scale;
+          done
+        );
+        (* Make everything below the 1 be a 0 by subtracting
+         * a multiple of it.  (Subtraction and addition are
+         * both exclusive or in the Galois field.) *)
+        for r_below = r+1 to (m.row_count) - 1 do
+          if m.&{r_below,r} <> char_0 then (
+            let scale = m.&{r_below,r} in
+            for c = 0 to (m.col_count) - 1 do
+              m.&{r_below, c} <- (((Galois.mul scale m.&{r,c}) |> int_of_char)
+                                  lxor
+                                  (m.&{r_below, c} |> int_of_char))
+                                 |> char_of_int;
+            done
+          )
+        done;
+        loop ~r:(r+1) row_count m
+      )
+    ) else (
+      Ok(())
+    )
+  in
+
+  match loop m.row_count m with
+  | Error(_) as e -> e
+  | Ok(())        -> begin
+      (* Now clear the part above the main diagonal. *)
+      for d = 0 to (m.row_count) - 1 do
+        for r_above = 0 to (d) - 1 do
+          if m.&{r_above,d} <> char_0 then (
+            let scale = m.&{r_above, d} in
+            for c = 0 to (m.col_count) - 1 do
+              m.&{r_above,c} <- ((Galois.mul scale m.&{d, c} |> int_of_char)
+                                 lxor
+                                 (m.&{r_above,c} |> int_of_char))
+                                |> char_of_int;
+            done
+          )
+        done
+      done;
+      Ok(())
+    end
