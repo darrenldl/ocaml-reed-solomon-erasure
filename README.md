@@ -3,7 +3,7 @@ OCaml port of [reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-e
 
 #### Port progress
 - [x] `galois.rs` -> `galois.ml` + `galois.mli`
-- [ ] `matrix.rs` -> `matrix.ml` + `matrix.mli`
+- [x] `matrix.rs` -> `matrix.ml` + `matrix.mli`
 - [ ] `errors.rs` -> `errorrs.ml` + `errors.mli`
 - [ ] `inversion_tree.rs` -> `inversion_tree.ml `+ `inversion_tree.mli`
 - [ ] `misc_utils.rs` -> `misc_utils.ml` + `misc_utils.mli`
