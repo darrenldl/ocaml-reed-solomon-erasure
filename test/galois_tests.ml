@@ -87,6 +87,20 @@ let test_identity test_ctxt =
     )
   done
 
+let qc_additive_identity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+       QCheck.char
+       (fun a -> sub a (sub (char_of_int 0) a) = char_of_int 0))
+
+let qc_multiplicative_identity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+       QCheck.char
+       (fun a ->
+          QCheck.assume (a <> (char_of_int 0));
+          mul a (div (char_of_int 1) a) = char_of_int 1))
+
 let suite =
   "galois_tests">:::
   ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
@@ -94,4 +108,6 @@ let suite =
    qc_add_associativity;
    qc_mul_associativity;
    "test_identity">::               test_identity;
+   qc_additive_identity;
+   qc_multiplicative_identity;
   ]
