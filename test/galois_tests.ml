@@ -237,6 +237,9 @@ let test_slice_add test_ctxt =
     )
     [16; 32; 34]
 
+let test_div_a_is_0 test_ctxt =
+  assert_equal (char_of_int 0) (div (char_of_int 0) (char_of_int 100))
+
 let suite =
   "galois_tests">:::
   ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
@@ -253,4 +256,5 @@ let suite =
    qc_add_distributivity;
    "test_galois">::                 test_galois;
    "test_slice_add">::              test_slice_add;
+   "test_div_a_is_0">::             test_div_a_is_0;
   ]
