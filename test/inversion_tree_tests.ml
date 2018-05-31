@@ -11,7 +11,39 @@ let test_new_inversion_tree test_ctxt =
 
   assert_equal (Some expect) (get_inverted_matrix tree [])
 
+let test_get_inverted_matrix test_ctxt =
+  let tree = make 3 2 in
+
+  let matrix = match get_inverted_matrix tree [] with
+    | Some m -> m
+    | None   -> failwith ""
+  in
+
+  let expect = Matrix.make_with_data [|Bytes.of_string "\001\000\000";
+                                       Bytes.of_string "\000\001\000";
+                                       Bytes.of_string "\000\000\001"|] in
+
+  assert_equal expect matrix;
+
+  let matrix = get_inverted_matrix tree [1] in
+  assert_equal None matrix;
+
+  let matrix = get_inverted_matrix tree [1; 2] in
+  assert_equal None matrix;
+
+  let matrix = Matrix.make 3 3 in
+  let matrix_copy = Matrix.copy matrix in
+
+  (match insert_inverted_matrix tree [1] matrix with
+   | Ok _    -> ()
+   | Error _ -> failwith ""
+  );
+
+  let cached_matrix = get_inverted_matrix tree [1] in
+  assert_equal (Some matrix_copy) cached_matrix
+
 let suite =
   "inversion_tree_tests">:::
-  ["test_new_inversion_tree">:: test_new_inversion_tree;
+  ["test_new_inversion_tree">::  test_new_inversion_tree;
+   "test_get_inverted_matrix">:: test_get_inverted_matrix;
   ]
