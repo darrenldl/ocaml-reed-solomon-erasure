@@ -1,7 +1,7 @@
 open OUnit2
 open Reed_solomon_erasure__.Matrix
 
-let make_random_matrix (size : int) : matrix =
+let make_random_matrix (size : int) : t =
   let data = Array.make size Bytes.empty in
   let data = Array.map (fun _ -> Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make 100 '\000')) data in
   make_with_data data

@@ -2,7 +2,7 @@ open Ops
 
 type error = SingularMatrix
 
-type matrix = {
+type t = {
   row_count : int;
   col_count : int;
   data      : bytes array;
@@ -18,14 +18,14 @@ let make_bytes_array (rows : int) (cols : int) : bytes array =
   let data = Array.make rows (Bytes.empty) in
   Array.map (fun _ -> Bytes.make cols '\x00') data
 
-let make (rows : int) (cols : int) : matrix =
+let make (rows : int) (cols : int) : t =
   let data = make_bytes_array rows cols in
 
   { row_count = rows;
     col_count = cols;
     data              }
 
-let make_with_data (init_data : bytes array) : matrix =
+let make_with_data (init_data : bytes array) : t =
   let rows = Array.length init_data in
   let cols = Bytes.length init_data.(0) in
 
@@ -46,7 +46,7 @@ let make_with_data (init_data : bytes array) : matrix =
     col_count = cols;
     data              }
 
-let identity (size : int) : matrix =
+let identity (size : int) : t =
   let result = make size size in
 
   for i = 0 to (size) - 1 do
@@ -55,22 +55,22 @@ let identity (size : int) : matrix =
 
   result
 
-let col_count (m : matrix) : int =
+let col_count (m : t) : int =
   m.col_count
 
-let row_count (m : matrix) : int =
+let row_count (m : t) : int =
   m.row_count
 
-let get (m : matrix) (r : int) (c : int) : char =
+let get (m : t) (r : int) (c : int) : char =
   m.&{r,c}
 
-let set (m : matrix) (r : int) (c : int) (v : char) : unit =
+let set (m : t) (r : int) (c : int) (v : char) : unit =
   m.&{r,c} <- v
 
-let copy (m : matrix) : matrix =
+let copy (m : t) : t =
   make_with_data (Array.map (fun x -> Bytes.copy x) m.data)
 
-let multiply (lhs : matrix) (rhs : matrix) : matrix =
+let multiply (lhs : t) (rhs : t) : t =
   if lhs.col_count <> rhs.col_count then
     failwith (Printf.sprintf "Colomn count on left is different from row count on right, lhs : %d, rhs : %d" lhs.col_count rhs.col_count);
 
@@ -88,7 +88,7 @@ let multiply (lhs : matrix) (rhs : matrix) : matrix =
 
   result
 
-let augment (lhs : matrix) (rhs : matrix) : matrix =
+let augment (lhs : t) (rhs : t) : t =
   if lhs.row_count <> rhs.row_count then
     failwith (Printf.sprintf "Matrices do not have the same row count, lhs : %d, rhs : %d" lhs.row_count rhs.row_count);
 
@@ -107,12 +107,12 @@ let augment (lhs : matrix) (rhs : matrix) : matrix =
   result
 
 let sub_matrix
-    (m    : matrix)
+    (m    : t)
     (rmin : int)
     (cmin : int)
     (rmax : int)
     (cmax : int)
-  : matrix =
+  : t =
   let result = make (rmax - rmin) (cmax - cmin) in
 
   for r = rmin to (rmax) - 1 do
@@ -123,10 +123,10 @@ let sub_matrix
 
   result
 
-let get_row (m : matrix) (row : int) : bytes =
+let get_row (m : t) (row : int) : bytes =
   m.data.(row)
 
-let swap_rows (m : matrix) (r1 : int) (r2 : int) : unit =
+let swap_rows (m : t) (r1 : int) (r2 : int) : unit =
   if r1 <> r2 then (
     let row1 = m.data.(r1) in
     let row2 = m.data.(r2) in
@@ -135,14 +135,14 @@ let swap_rows (m : matrix) (r1 : int) (r2 : int) : unit =
     m.data.(r2) <- row1
   )
 
-let is_square (m : matrix) : bool =
+let is_square (m : t) : bool =
   m.row_count = m.col_count
 
-let gaussian_elim (m : matrix) : (unit, error) result =
+let gaussian_elim (m : t) : (unit, error) result =
   let char_0 = char_of_int 0 in
   let char_1 = char_of_int 1 in
 
-  let rec do_swaps (r : int) ?(r_below : int = r + 1) (m : matrix) : unit =
+  let rec do_swaps (r : int) ?(r_below : int = r + 1) (m : t) : unit =
     if r_below < m.row_count then (
       if m.&{r_below, r} <> char_0 then
         swap_rows m r r_below
@@ -151,7 +151,7 @@ let gaussian_elim (m : matrix) : (unit, error) result =
     )
   in
 
-  let rec loop ?(r : int = 0) (row_count : int) (m : matrix) : (unit, error) result =
+  let rec loop ?(r : int = 0) (row_count : int) (m : t) : (unit, error) result =
     if r < row_count then (
       if m.&{r,r} = char_0 then
         do_swaps r m;
@@ -207,7 +207,7 @@ let gaussian_elim (m : matrix) : (unit, error) result =
       Ok(())
     end
 
-let invert (m : matrix) : (matrix, error) result =
+let invert (m : t) : (t, error) result =
   if not (is_square m) then
     failwith "Trying to invert a non-square matrix"
   else (
@@ -221,7 +221,7 @@ let invert (m : matrix) : (matrix, error) result =
     | Error(_) as e -> e
   )
 
-let vandermonde (rows : int) (cols : int) : matrix =
+let vandermonde (rows : int) (cols : int) : t =
   let result = make rows cols in
 
   for r = 0 to (rows) - 1 do

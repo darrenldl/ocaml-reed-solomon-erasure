@@ -1,45 +1,45 @@
-type matrix
+type t
 
 type error = SingularMatrix
 
 val ( .%{}   ) : bytes array -> int * int -> char
 val ( .%{}<- ) : bytes array -> int * int -> char -> unit
 
-val ( .&{}   ) : matrix -> int * int -> char
-val ( .&{}<- ) : matrix -> int * int -> char -> unit
+val ( .&{}   ) : t -> int * int -> char
+val ( .&{}<- ) : t -> int * int -> char -> unit
 
 val make_bytes_array : int -> int -> bytes array
 
-val make : int -> int -> matrix
+val make : int -> int -> t
 
-val make_with_data : bytes array -> matrix
+val make_with_data : bytes array -> t
 
-val identity : int -> matrix
+val identity : int -> t
 
-val col_count : matrix -> int
+val col_count : t -> int
 
-val row_count : matrix -> int
+val row_count : t -> int
 
-val get : matrix -> int -> int -> char
+val get : t -> int -> int -> char
 
-val set : matrix -> int -> int -> char -> unit
+val set : t -> int -> int -> char -> unit
 
-val copy : matrix -> matrix
+val copy : t -> t
 
-val multiply : matrix -> matrix -> matrix
+val multiply : t -> t -> t
 
-val augment : matrix -> matrix -> matrix
+val augment : t -> t -> t
 
-val sub_matrix : matrix -> int -> int -> int -> int -> matrix
+val sub_matrix : t -> int -> int -> int -> int -> t
 
-val get_row : matrix -> int -> bytes
+val get_row : t -> int -> bytes
 
-val swap_rows : matrix -> int -> int -> unit
+val swap_rows : t -> int -> int -> unit
 
-val is_square : matrix -> bool
+val is_square : t -> bool
 
-val gaussian_elim : matrix -> (unit, error) result
+val gaussian_elim : t -> (unit, error) result
 
-val invert : matrix -> (matrix, error) result
+val invert : t -> (t, error) result
 
-val vandermonde : int -> int -> matrix
+val vandermonde : int -> int -> t
