@@ -11,6 +11,6 @@ OCaml port of [reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-e
 - [ ] `lib.rs` -> `reed_solomon_erasure.ml` + `reed_solomon_erasure.mli`
 - [x] `galois_tests.rs` -> `galois_tests.ml`
 - [x] `matrix_tests.rs` -> `matrix_tests.ml`
-- [ ] `inversion_tree_tests.rs` -> `inversion_tree_tests.ml`
+- [x] `inversion_tree_tests.rs` -> `inversion_tree_tests.ml`
 - [ ] `errors_tests.rs` -> `errors_tests.ml`
 - [ ] `lib_tests.rs` -> `lib_tests.ml`
