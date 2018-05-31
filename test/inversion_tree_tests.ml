@@ -1,6 +1,7 @@
 open OUnit2
 open Reed_solomon_erasure__
 open Reed_solomon_erasure__.Inversion_tree
+open Matrix_tests
 
 let test_new_inversion_tree test_ctxt =
   let tree = make 3 2 in
@@ -69,9 +70,31 @@ let test_insert_inverted_matrix test_ctxt =
    | Error _ -> assert_failure ""
   )
 
+let test_double_insert_inverted_matrix test_ctxt =
+  let tree = make 3 2 in
+
+  let matrix1 = Matrix_tests.make_random_matrix 3 in
+  let matrix2 = Matrix_tests.make_random_matrix 3 in
+
+  let matrix_copy1 = Matrix.copy matrix1 in
+  let matrix_copy2 = Matrix.copy matrix2 in
+
+  (match insert_inverted_matrix tree [1] matrix_copy1 with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  );
+  (match insert_inverted_matrix tree [1] matrix_copy2 with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  );
+
+  let cached_matrix = get_inverted_matrix tree [1] in
+  assert_equal (Some matrix_copy2) cached_matrix
+
 let suite =
   "inversion_tree_tests">:::
-  ["test_new_inversion_tree">::     test_new_inversion_tree;
-   "test_get_inverted_matrix">::    test_get_inverted_matrix;
-   "test_insert_inverted_matrix">:: test_insert_inverted_matrix;
+  ["test_new_inversion_tree">::            test_new_inversion_tree;
+   "test_get_inverted_matrix">::           test_get_inverted_matrix;
+   "test_insert_inverted_matrix">::        test_insert_inverted_matrix;
+   "test_double_insert_inverted_matrix">:: test_double_insert_inverted_matrix
   ]
