@@ -158,13 +158,13 @@ let make_random_invalid_indices
 
 let qc_tree_same_as_hash_map =
   QCheck_runner.to_ounit2_test
-    (QCheck.Test.make ~count:3000 ~name:"qc_tree_same_as_hash_map"
-       QCheck.(triple (int_range 0 256) (int_range 0 256) (triple (int_range 0 100) (list_of_size (QCheck.Gen.int_range 0 256) small_nat) (int_range 0 10)))
+    (QCheck.Test.make ~count:2000 ~name:"qc_tree_same_as_hash_map"
+       QCheck.(triple (int_range 1 255) (int_range 1 255) (triple (int_range 5 105) (list_of_size (QCheck.Gen.int_range 0 10) small_nat) (int_range 0 1)))
        (fun (data_shards, parity_shards, (matrix_count, iter_order, read_count)) ->
-          QCheck.assume (data_shards   > 0);
+          QCheck.assume (data_shards > 0);
           QCheck.assume (parity_shards > 0);
           QCheck.assume (data_shards + parity_shards <= 256);
-          let res = ref true in
+          QCheck.assume (matrix_count > 0);
           let tree = make data_shards parity_shards in
           let map = Hashtbl.create matrix_count in
 
@@ -178,30 +178,64 @@ let qc_tree_same_as_hash_map =
                        invalid_indices_set := invalid_indices :: !invalid_indices_set;
                       )
             | Error AlreadySet -> ()
-            | Error NotSquare  -> assert_failure ""
+            | Error NotSquare  -> assert_failure "Not square"
           done;
 
           let invalid_indices_set = Array.of_list !invalid_indices_set in
 
-          for _ = 0 to (read_count) - 1 do
-            if Array.length invalid_indices_set > 0 then (
-              List.iter
-                (fun i ->
-                   let i = i mod (Array.length invalid_indices_set) in
+          let res = ref true in
+          let counter = ref 0 in
+          while !counter < read_count && !res do
+            (* iterate according to the provided order *)
+            (* if Array.length invalid_indices_set > 0 then (
+             *   List.iter
+             *     (fun i ->
+             *        let i = i mod (Array.length invalid_indices_set) in
+             * 
+             *        let invalid_indices = invalid_indices_set.(i) in
+             * 
+             *        let matrix_in_tree =
+             *          get_inverted_matrix tree invalid_indices in
+             *        let matrix_in_map = Hashtbl.find map invalid_indices in
+             *        if matrix_in_tree <> Some matrix_in_map then
+             *          res := false
+             *     )
+             *     iter_order
+             * ); *)
 
-                   let invalid_indices = invalid_indices_set.(i) in
+            (* iterate through the insertion order *)
+            (* Array.iter
+             *   (fun invalid_indices ->
+             *      let matrix_in_tree =
+             *        get_inverted_matrix tree invalid_indices in
+             *      let matrix_in_map =
+             *        Hashtbl.find map invalid_indices in
+             *      if matrix_in_tree <> Some matrix_in_map then
+             *        res := false
+             *   )
+             *   invalid_indices_set; *)
 
-                   let matrix_in_tree =
-                     match get_inverted_matrix tree invalid_indices with
-                     | Some m -> m
-                     | None -> assert_failure ""
-                   in
-                   let matrix_in_map = Hashtbl.find map invalid_indices in
-                   if matrix_in_tree <> matrix_in_map && !res then
-                     res := false
-                )
-                iter_order
-            )
+            (* iterate through the map's order *)
+            Hashtbl.iter
+              (fun invalid_indices matrix_in_map ->
+                 (* let matrix_in_tree =
+                  *   get_inverted_matrix tree invalid_indices in *)
+                 let matrix_in_tree =
+                   match get_inverted_matrix tree invalid_indices with
+                   | None -> assert_failure ""
+                   | Some m -> m
+                 in
+                 if matrix_in_tree <> matrix_in_map then (
+                   Printf.printf "matrix in map :\n";
+                   Matrix.print_debug matrix_in_map;
+                   Printf.printf "matrix in tree :\n";
+                   Matrix.print_debug matrix_in_tree;
+                   res := false
+                 )
+              )
+              map;
+
+            counter := !counter + 1
           done;
 
           !res
