@@ -260,6 +260,15 @@ let test_pure_ocaml_same_as_maybe_ffi test_ctxt =
       mul_slice_pure_ocaml c (Bytes input) output_copy;
 
       assert_equal output output_copy;
+    end;
+    begin
+      let output = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
+      let output_copy = Bytes.copy output in
+
+      mul_slice_xor            c (Bytes input) output;
+      mul_slice_xor_pure_ocaml c (Bytes input) output_copy;
+
+      assert_equal output output_copy;
     end
   done
 
