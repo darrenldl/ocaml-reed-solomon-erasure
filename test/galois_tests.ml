@@ -240,21 +240,46 @@ let test_slice_add test_ctxt =
 let test_div_a_is_0 test_ctxt =
   assert_equal (char_of_int 0) (div (char_of_int 0) (char_of_int 100))
 
+let test_div_b_is_0 test_ctxt =
+  try
+    div (char_of_int 1) (char_of_int 0) |> ignore;
+    assert_failure "Missing exception"
+  with
+  | Failure _ -> ()
+
+let test_pure_ocaml_same_as_maybe_ffi test_ctxt =
+  let len = 10_003 in
+  for _ = 0 to (100) - 1 do
+    let c = char_of_int (Random.int 256) in
+    let input = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
+    begin
+      let output = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
+      let output_copy = Bytes.copy output in
+
+      mul_slice            c (Bytes input) output;
+      mul_slice_pure_ocaml c (Bytes input) output_copy;
+
+      assert_equal output output_copy;
+    end
+  done
+
 let suite =
   "galois_tests">:::
-  ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
-   "test_associativity">::          test_associativity;
+  ["log_table_same_as_backblaze">::       log_table_same_as_backblaze;
+   "test_associativity">::                test_associativity;
    qc_add_associativity;
    qc_mul_associativity;
-   "test_identity">::               test_identity;
+   "test_identity">::                     test_identity;
    qc_additive_identity;
    qc_multiplicative_identity;
-   "test_commutativity">::          test_commutativity;
+   "test_commutativity">::                test_commutativity;
    qc_add_associativity;
    qc_mul_associativity;
-   "test_distributivity">::         test_distributivity;
+   "test_distributivity">::               test_distributivity;
    qc_add_distributivity;
-   "test_galois">::                 test_galois;
-   "test_slice_add">::              test_slice_add;
-   "test_div_a_is_0">::             test_div_a_is_0;
+   "test_galois">::                       test_galois;
+   "test_slice_add">::                    test_slice_add;
+   "test_div_a_is_0">::                   test_div_a_is_0;
+   "test_div_b_is_0">::                   test_div_b_is_0;
+   "test_pure_ocaml_same_as_maybe_ffi">:: test_pure_ocaml_same_as_maybe_ffi;
   ]
