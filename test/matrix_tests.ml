@@ -157,6 +157,3 @@ let suite =
    "test_matrix_inverse_non_square">:: test_matrix_inverse_non_square;
    "test_matrix_inverse_singular">::   test_matrix_inverse_singular;
   ]
-
-let () =
-  run_test_tt_main suite
