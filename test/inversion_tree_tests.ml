@@ -142,6 +142,71 @@ let test_extended_inverted_matrix test_ctxt =
   let result = get_inverted_matrix tree [0; 3; 4; 11] in
   assert_equal (Some matrix3_copy) result
 
+let make_random_invalid_indices
+    (data_shards   : int)
+    (parity_shards : int)
+  : int list =
+  let invalid_count = ref 0 in
+  let res = ref [] in
+  for i = 0 to (data_shards + parity_shards) - 1 do
+    if Random.bool () && !invalid_count < parity_shards then (
+      res := i :: !res;
+      invalid_count := !invalid_count + 1;
+    )
+  done;
+  (List.rev !res)
+
+let qc_tree_same_as_hash_map =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:3000 ~name:"qc_tree_same_as_hash_map"
+       QCheck.(triple (int_range 0 256) (int_range 0 256) (triple (int_range 0 100) (list_of_size (QCheck.Gen.int_range 0 256) small_nat) (int_range 0 10)))
+       (fun (data_shards, parity_shards, (matrix_count, iter_order, read_count)) ->
+          QCheck.assume (data_shards   > 0);
+          QCheck.assume (parity_shards > 0);
+          QCheck.assume (data_shards + parity_shards <= 256);
+          let res = ref true in
+          let tree = make data_shards parity_shards in
+          let map = Hashtbl.create matrix_count in
+
+          let invalid_indices_set = ref [] in
+
+          for _ = 0 to (matrix_count) - 1 do
+            let invalid_indices = make_random_invalid_indices data_shards parity_shards in
+            let matrix = make_random_matrix data_shards in
+            match insert_inverted_matrix tree invalid_indices matrix with
+            | Ok _ -> (Hashtbl.add map invalid_indices matrix;
+                       invalid_indices_set := invalid_indices :: !invalid_indices_set;
+                      )
+            | Error AlreadySet -> ()
+            | Error NotSquare  -> assert_failure ""
+          done;
+
+          let invalid_indices_set = Array.of_list !invalid_indices_set in
+
+          for _ = 0 to (read_count) - 1 do
+            if Array.length invalid_indices_set > 0 then (
+              List.iter
+                (fun i ->
+                   let i = i mod (Array.length invalid_indices_set) in
+
+                   let invalid_indices = invalid_indices_set.(i) in
+
+                   let matrix_in_tree =
+                     match get_inverted_matrix tree invalid_indices with
+                     | Some m -> m
+                     | None -> assert_failure ""
+                   in
+                   let matrix_in_map = Hashtbl.find map invalid_indices in
+                   if matrix_in_tree <> matrix_in_map && !res then
+                     res := false
+                )
+                iter_order
+            )
+          done;
+
+          !res
+       ))
+
 let suite =
   "inversion_tree_tests">:::
   ["test_new_inversion_tree">::            test_new_inversion_tree;
@@ -149,4 +214,5 @@ let suite =
    "test_insert_inverted_matrix">::        test_insert_inverted_matrix;
    "test_double_insert_inverted_matrix">:: test_double_insert_inverted_matrix;
    "test_extended_inverted_matrix">::      test_extended_inverted_matrix;
+   qc_tree_same_as_hash_map;
   ]
