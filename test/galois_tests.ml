@@ -213,6 +213,30 @@ let test_galois test_ctxt =
   assert_equal (exp (char_of_int 5) 20) (char_of_int 235);
   assert_equal (exp (char_of_int 13) 7) (char_of_int 43)
 
+let test_slice_add test_ctxt =
+  List.iter
+    (fun len ->
+       let input = Bytes.to_string (Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000')) in
+       let output = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
+       let expect = Bytes.make len '\000' in
+       for i = 0 to (len) - 1 do
+         expect.%(i) <- char_of_int ((int_of_char input.[i]) lxor (int_of_char output.%(i)));
+       done;
+       slice_xor (String input) output;
+       for i = 0 to (len) - 1 do
+         assert_equal expect.%(i) output.%(i);
+       done;
+       let output = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
+       for i = 0 to (len) - 1 do
+         expect.%(i) <- char_of_int ((int_of_char input.[i]) lxor (int_of_char output.%(i)));
+       done;
+       slice_xor (String input) output;
+       for i = 0 to (len) - 1 do
+         assert_equal expect.%(i) output.%(i);
+       done;
+    )
+    [16; 32; 34]
+
 let suite =
   "galois_tests">:::
   ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
@@ -228,4 +252,5 @@ let suite =
    "test_distributivity">::         test_distributivity;
    qc_add_distributivity;
    "test_galois">::                 test_galois;
+   "test_slice_add">::              test_slice_add;
   ]
