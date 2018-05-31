@@ -1,7 +1,7 @@
+open OUnit2
 open Reed_solomon_erasure__.Galois
 open Reed_solomon_erasure__.Ops
 open Reed_solomon_erasure__.Tables
-open OUnit2
 
 let backblaze_log_table =
   (String.concat ""
@@ -60,8 +60,22 @@ let test_associativity test_ctxt =
     done
   done
 
+let qc_add_associativity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+       QCheck.(triple char char char)
+       (fun (a,b,c) -> add a (add b c) = add (add a b) c))
+
+let qc_mul_associativity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+       QCheck.(triple char char char)
+       (fun (a,b,c) -> mul a (mul b c) = mul (mul a b) c))
+
 let suite =
   "galois_tests">:::
   ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
    "test_associativity">::          test_associativity;
+   qc_add_associativity;
+   qc_mul_associativity;
   ]

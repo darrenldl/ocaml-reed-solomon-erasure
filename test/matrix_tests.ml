@@ -1,5 +1,5 @@
-open Reed_solomon_erasure__.Matrix
 open OUnit2
+open Reed_solomon_erasure__.Matrix
 
 let make_random_matrix (size : int) : matrix =
   let data = Array.make size Bytes.empty in
