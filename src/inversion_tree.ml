@@ -11,7 +11,13 @@ let make (data_shards : int) (parity_shards : int) : t =
                      children = Array.make (data_shards + parity_shards) None; };
     total_shards = data_shards + parity_shards; }
 
-module Tree = struct
+module Tree : sig
+  val get_child : tree -> int -> int -> int -> tree
+
+  val get_inverted_matrix : tree -> int list -> int -> int -> Matrix.t option
+
+  val insert_inverted_matrix : tree -> Matrix.t -> int list -> int -> int -> unit
+end = struct
   let make (matrix : Matrix.t option) (children_count : int) : tree =
     { matrix;
       children = Array.make children_count None }
@@ -24,15 +30,13 @@ module Tree = struct
     : tree =
     let node_index = requested_index - offset in
 
-    begin
-      match tree.children.(node_index) with
-      | None -> (
-          let child = make None (total_shards - offset) in
-          tree.children.(node_index) <- Some child;
-          child
-        )
-      | Some x -> x
-    end
+    match tree.children.(node_index) with
+    | None -> (
+        let child = make None (total_shards - offset) in
+        tree.children.(node_index) <- Some child;
+        child
+      )
+    | Some x -> x
 
   let rec get_inverted_matrix
       (tree            : tree)
