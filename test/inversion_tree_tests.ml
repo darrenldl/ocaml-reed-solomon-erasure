@@ -91,10 +91,62 @@ let test_double_insert_inverted_matrix test_ctxt =
   let cached_matrix = get_inverted_matrix tree [1] in
   assert_equal (Some matrix_copy2) cached_matrix
 
+let test_extended_inverted_matrix test_ctxt =
+  let tree = make 10 3 in
+  let matrix = Matrix.make 10 10 in
+  let matrix_copy = Matrix.copy matrix in
+  let matrix2 = Matrix.make_with_data [|Bytes.of_string "\000\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\000\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\000\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\000\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\000\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009"|] in
+  let matrix2_copy = Matrix.copy matrix2 in
+  let matrix3 = Matrix.make_with_data [|Bytes.of_string "\009\001\002\003\004\005\006\007\008\000";
+                                        Bytes.of_string "\009\001\002\003\004\005\006\007\008\000";
+                                        Bytes.of_string "\009\001\002\003\004\005\006\007\008\000";
+                                        Bytes.of_string "\009\001\002\003\004\005\006\007\008\000";
+                                        Bytes.of_string "\009\001\002\003\004\005\006\007\008\000";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009";
+                                        Bytes.of_string "\001\001\002\003\004\005\006\007\008\009"|] in
+  let matrix3_copy = Matrix.copy matrix3 in
+
+  (match insert_inverted_matrix tree [1; 2] matrix with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  );
+
+  let result = get_inverted_matrix tree [1; 2] in
+  assert_equal (Some matrix_copy) result;
+
+  (match insert_inverted_matrix tree [1; 2; 5; 12] matrix2 with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  );
+
+  let result = get_inverted_matrix tree [1; 2; 5; 12] in
+  assert_equal (Some matrix2_copy) result;
+
+  (match insert_inverted_matrix tree [0; 3; 4; 11] matrix3 with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  );
+
+  let result = get_inverted_matrix tree [0; 3; 4; 11] in
+  assert_equal (Some matrix3_copy) result
+
 let suite =
   "inversion_tree_tests">:::
   ["test_new_inversion_tree">::            test_new_inversion_tree;
    "test_get_inverted_matrix">::           test_get_inverted_matrix;
    "test_insert_inverted_matrix">::        test_insert_inverted_matrix;
-   "test_double_insert_inverted_matrix">:: test_double_insert_inverted_matrix
+   "test_double_insert_inverted_matrix">:: test_double_insert_inverted_matrix;
+   "test_extended_inverted_matrix">::      test_extended_inverted_matrix;
   ]
