@@ -46,6 +46,18 @@ let make_with_data (init_data : bytes array) : t =
     col_count = cols;
     data              }
 
+let print_debug (m : t) : unit =
+  Array.iter
+    (fun x ->
+       Bytes.iter
+         (fun x ->
+            Printf.printf "%d, " (int_of_char x)
+         )
+         x;
+       Printf.printf "\n"
+    )
+    m.data
+
 let identity (size : int) : t =
   let result = make size size in
 

@@ -14,6 +14,8 @@ val make : int -> int -> t
 
 val make_with_data : bytes array -> t
 
+val print_debug : t -> unit
+
 val identity : int -> t
 
 val col_count : t -> int
