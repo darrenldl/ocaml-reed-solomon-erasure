@@ -176,8 +176,42 @@ let test_galois test_ctxt =
   done;
   mul_slice_pure_ocaml (char_of_int 25) (String input) output2;
   for i = 0 to (String.length input) - 1 do
+    assert_equal expect.[i] output2.%(i)
+  done;
+
+  let expect_xor = "\x00\x2d\x5a\x77\xb4\x99\xee\x2f\x79\xf2\x07\x51\xd4\x19\x31\xc9\xf8\xfc\xf9\x4f\x62\x15\x38\xfb\xd6\xa1\x8c\x96\xbb\xcc\xe1\x22\x0f\x78" in
+  mul_slice_xor (char_of_int 52) (String input) output1;
+  for i = 0 to (String.length input) - 1 do
+    assert_equal expect_xor.[i] output1.%(i)
+  done;
+  mul_slice_xor_pure_ocaml (char_of_int 52) (String input) output2;
+  for i = 0 to (String.length input) - 1 do
+    assert_equal expect_xor.[i] output2.%(i)
+  done;
+
+  let expect = "\x00\xb1\x7f\xce\xfe\x4f\x81\x9e\x03\x06\xe8\x75\xbd\x40\x36\xa3\x95\xcb\x0c\xdd\x6c\xa2\x13\x23\x92\x5c\xed\x1b\xaa\x64\xd5\xe5\x54\x9a" in
+  mul_slice (char_of_int 177) (String input) output1;
+  for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output1.%(i)
-  done
+  done;
+  mul_slice_pure_ocaml (char_of_int 177) (String input) output2;
+  for i = 0 to (String.length input) - 1 do
+    assert_equal expect.[i] output2.%(i)
+  done;
+
+  let expect_xor = "\x00\xc4\x95\x51\x37\xf3\xa2\xfb\xec\xc5\xd0\xc7\x53\x88\xa3\xa5\x06\x78\x97\x9f\x5b\x0a\xce\xa8\x6c\x3d\xf9\xdf\x1b\x4a\x8e\xe8\x2c\x7d" in
+  mul_slice_xor (char_of_int 117) (String input) output1;
+  for i = 0 to (String.length input) - 1 do
+    assert_equal expect_xor.[i] output1.%(i)
+  done;
+  mul_slice_xor_pure_ocaml (char_of_int 117) (String input) output2;
+  for i = 0 to (String.length input) - 1 do
+    assert_equal expect_xor.[i] output2.%(i)
+  done;
+
+  assert_equal (exp (char_of_int 2) 2) (char_of_int 4);
+  assert_equal (exp (char_of_int 5) 20) (char_of_int 235);
+  assert_equal (exp (char_of_int 13) 7) (char_of_int 43)
 
 let suite =
   "galois_tests">:::
