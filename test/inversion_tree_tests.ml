@@ -174,7 +174,7 @@ let qc_tree_same_as_hash_map =
             let invalid_indices = make_random_invalid_indices data_shards parity_shards in
             let matrix = make_random_matrix data_shards in
             match insert_inverted_matrix tree invalid_indices matrix with
-            | Ok _ -> (Hashtbl.add map invalid_indices matrix;
+            | Ok _ -> (Hashtbl.replace map invalid_indices matrix;
                        invalid_indices_set := invalid_indices :: !invalid_indices_set;
                       )
             | Error AlreadySet -> ()
@@ -187,51 +187,41 @@ let qc_tree_same_as_hash_map =
           let counter = ref 0 in
           while !counter < read_count && !res do
             (* iterate according to the provided order *)
-            (* if Array.length invalid_indices_set > 0 then (
-             *   List.iter
-             *     (fun i ->
-             *        let i = i mod (Array.length invalid_indices_set) in
-             * 
-             *        let invalid_indices = invalid_indices_set.(i) in
-             * 
-             *        let matrix_in_tree =
-             *          get_inverted_matrix tree invalid_indices in
-             *        let matrix_in_map = Hashtbl.find map invalid_indices in
-             *        if matrix_in_tree <> Some matrix_in_map then
-             *          res := false
-             *     )
-             *     iter_order
-             * ); *)
+            if Array.length invalid_indices_set > 0 then (
+              List.iter
+                (fun i ->
+                   let i = i mod (Array.length invalid_indices_set) in
+
+                   let invalid_indices = invalid_indices_set.(i) in
+
+                   let matrix_in_tree =
+                     get_inverted_matrix tree invalid_indices in
+                   let matrix_in_map = Hashtbl.find map invalid_indices in
+                   if matrix_in_tree <> Some matrix_in_map then
+                     res := false
+                )
+                iter_order
+            );
 
             (* iterate through the insertion order *)
-            (* Array.iter
-             *   (fun invalid_indices ->
-             *      let matrix_in_tree =
-             *        get_inverted_matrix tree invalid_indices in
-             *      let matrix_in_map =
-             *        Hashtbl.find map invalid_indices in
-             *      if matrix_in_tree <> Some matrix_in_map then
-             *        res := false
-             *   )
-             *   invalid_indices_set; *)
+            Array.iter
+              (fun invalid_indices ->
+                 let matrix_in_tree =
+                   get_inverted_matrix tree invalid_indices in
+                 let matrix_in_map =
+                   Hashtbl.find map invalid_indices in
+                 if matrix_in_tree <> Some matrix_in_map then
+                   res := false
+              )
+              invalid_indices_set;
 
             (* iterate through the map's order *)
             Hashtbl.iter
               (fun invalid_indices matrix_in_map ->
-                 (* let matrix_in_tree =
-                  *   get_inverted_matrix tree invalid_indices in *)
                  let matrix_in_tree =
-                   match get_inverted_matrix tree invalid_indices with
-                   | None -> assert_failure ""
-                   | Some m -> m
-                 in
-                 if matrix_in_tree <> matrix_in_map then (
-                   Printf.printf "matrix in map :\n";
-                   Matrix.print_debug matrix_in_map;
-                   Printf.printf "matrix in tree :\n";
-                   Matrix.print_debug matrix_in_tree;
+                   get_inverted_matrix tree invalid_indices in
+                 if matrix_in_tree <> Some matrix_in_map then
                    res := false
-                 )
               )
               map;
 
