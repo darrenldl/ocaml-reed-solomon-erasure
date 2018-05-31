@@ -36,14 +36,42 @@ let test_get_inverted_matrix test_ctxt =
 
   (match insert_inverted_matrix tree [1] matrix with
    | Ok _    -> ()
-   | Error _ -> failwith ""
+   | Error _ -> assert_failure ""
   );
 
   let cached_matrix = get_inverted_matrix tree [1] in
   assert_equal (Some matrix_copy) cached_matrix
 
+let test_insert_inverted_matrix test_ctxt =
+  let tree = make 3 2 in
+
+  let matrix      = Matrix.make 3 3 in
+  let matrix_copy = Matrix.copy matrix in
+
+  (match insert_inverted_matrix tree [1] matrix with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  );
+  (match insert_inverted_matrix tree [] matrix_copy with
+   | Ok _  -> assert_failure ""
+   | Error _ -> ()
+  );
+
+  let matrix = Matrix.make 3 2 in
+  (match insert_inverted_matrix tree [2] matrix with
+   | Ok _ -> assert_failure ""
+   | Error _ -> ()
+  );
+
+  let matrix = Matrix.make 3 3 in
+  (match insert_inverted_matrix tree [0;1] matrix with
+   | Ok _ -> ()
+   | Error _ -> assert_failure ""
+  )
+
 let suite =
   "inversion_tree_tests">:::
-  ["test_new_inversion_tree">::  test_new_inversion_tree;
-   "test_get_inverted_matrix">:: test_get_inverted_matrix;
+  ["test_new_inversion_tree">::     test_new_inversion_tree;
+   "test_get_inverted_matrix">::    test_get_inverted_matrix;
+   "test_insert_inverted_matrix">:: test_insert_inverted_matrix;
   ]
