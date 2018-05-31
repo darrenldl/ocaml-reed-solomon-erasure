@@ -8,8 +8,8 @@ type matrix = {
   data      : bytes array;
 }
 
-let ( .%{}   ) = fun m (x,y)   -> m.(x).%[y]
-let ( .%{}<- ) = fun m (x,y) v -> m.(x).%[y] <- v
+let ( .%{}   ) = fun m (x,y)   -> m.(x).%(y)
+let ( .%{}<- ) = fun m (x,y) v -> m.(x).%(y) <- v
 
 let ( .&{}   ) = fun m (x,y)   -> m.data.%{x,y}
 let ( .&{}<- ) = fun m (x,y) v -> m.data.%{x,y} <- v
@@ -38,7 +38,7 @@ let make_with_data (init_data : bytes array) : matrix =
 
   for r = 0 to (rows) - 1 do
     for c = 0 to (cols) - 1 do
-      data.%{r,c} <- init_data.(r).%[c]
+      data.%{r,c} <- init_data.(r).%(c)
     done
   done;
 

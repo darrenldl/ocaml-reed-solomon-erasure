@@ -1,4 +1,2 @@
-let ( .%[]   ) = Bytes.get
-let ( .%[]<- ) = Bytes.set
-
-let ( .%()   ) = String.get
+let ( .%()   ) = Bytes.get
+let ( .%()<- ) = Bytes.set

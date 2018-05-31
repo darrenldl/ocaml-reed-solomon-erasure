@@ -9,7 +9,7 @@ let length (data : t) : int =
 
 let get (data : t) (i : int) : char =
   match data with
-  | String x -> x.%(i)
-  | Bytes  x -> x.%[i]
+  | String x -> x.[i]
+  | Bytes  x -> x.%(i)
 
 let ( .%{} ) = get

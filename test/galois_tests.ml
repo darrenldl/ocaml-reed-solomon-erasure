@@ -40,7 +40,7 @@ let backblaze_log_table =
 
 let log_table_same_as_backblaze test_ctxt =
   for i = 0 to (256) - 1 do
-    assert_equal log_table.%(i) backblaze_log_table.%(i)
+    assert_equal log_table.[i] backblaze_log_table.[i]
   done
 
 let test_associativity test_ctxt =
@@ -68,7 +68,7 @@ let qc_add_associativity =
 
 let qc_mul_associativity =
   QCheck_runner.to_ounit2_test
-    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+    (QCheck.Test.make ~count:10000 ~name:"qc_mul_associativity"
        QCheck.(triple char char char)
        (fun (a,b,c) -> mul a (mul b c) = mul (mul a b) c))
 
@@ -89,17 +89,95 @@ let test_identity test_ctxt =
 
 let qc_additive_identity =
   QCheck_runner.to_ounit2_test
-    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+    (QCheck.Test.make ~count:10000 ~name:"qc_additive_identity"
        QCheck.char
        (fun a -> sub a (sub (char_of_int 0) a) = char_of_int 0))
 
 let qc_multiplicative_identity =
   QCheck_runner.to_ounit2_test
-    (QCheck.Test.make ~count:10000 ~name:"qc_add_associativity"
+    (QCheck.Test.make ~count:10000 ~name:"qc_multiplicative_identity"
        QCheck.char
        (fun a ->
           QCheck.assume (a <> (char_of_int 0));
           mul a (div (char_of_int 1) a) = char_of_int 1))
+
+let test_commutativity test_ctxt =
+  for a = 0 to (256) - 1 do
+    let a = char_of_int a in
+    for b = 0 to (256) -1 do
+      let b = char_of_int b in
+      let x = add a b in
+      let y = add b a in
+      assert_equal x y;
+      let x = mul a b in
+      let y = mul b a in
+      assert_equal x y;
+    done
+  done
+
+let qc_add_commutativity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_add_commutativity"
+       QCheck.(triple char char char)
+       (fun (a,b,_) ->
+          add a b = add b a))
+
+let qc_mul_commutativity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_mul_commutativity"
+       QCheck.(triple char char char)
+       (fun (a,b,_) ->
+          mul a b = mul b a))
+
+let test_distributivity test_ctxt =
+  for a = 0 to (256) - 1 do
+    let a = char_of_int a in
+    for b = 0 to (256) - 1 do
+      let b = char_of_int b in
+      for c = 0 to (256) - 1 do
+        let c = char_of_int c in
+        let x = mul a (add b c) in
+        let y = add (mul a b) (mul a c) in
+        assert_equal x y;
+      done
+    done
+  done
+
+let qc_add_distributivity =
+  QCheck_runner.to_ounit2_test
+    (QCheck.Test.make ~count:10000 ~name:"qc_add_distributivity"
+       QCheck.(triple char char char)
+       (fun (a,b,c) ->
+          mul a (add b c) = add (mul a b) (mul a c)))
+
+let test_exp test_ctxt =
+  for a = 0 to (256) - 1 do
+    let a = char_of_int a in
+    let power = ref 1 in
+    for j = 0 to (256) - 1 do
+      let x = exp a j in
+      assert_equal x (char_of_int !power);
+      power := int_of_char (mul (char_of_int !power) a);
+    done
+  done
+
+let test_galois test_ctxt =
+  assert_equal (mul (char_of_int 3) (char_of_int 4)) (char_of_int 12);
+  assert_equal (mul (char_of_int 7) (char_of_int 7)) (char_of_int 21);
+  assert_equal (mul (char_of_int 23) (char_of_int 45)) (char_of_int 41);
+
+  let input = "\000\001\002\003\004\005\006\010\050\100\150\174\201\255\099\032\067\085\200\199\198\197\196\195\194\193\192\191\190\189\188\187\186\185" in
+  let output1 = Bytes.make (String.length input) '\000' in
+  let output2 = Bytes.make (String.length input) '\000' in
+  mul_slice (char_of_int 52) (String input) output1;
+  let expect = "\x00\x19\x32\x2b\x64\x7d\x56\xfa\xb8\x6d\xc7\x85\xc3\x1f\x22\x07\x25\xfe\xda\x5d\x44\x6f\x76\x39\x20\x0b\x12\x11\x08\x23\x3a\x75\x6c\x47" in
+  for i = 0 to (String.length input) do
+    assert_equal expect.[i] output1.%(i)
+  done;
+  mul_slice_pure_ocaml (char_of_int 52) (String input) output2;
+  for i = 0 to (String.length input) do
+    assert_equal expect.[i] output1.%(i)
+  done
 
 let suite =
   "galois_tests">:::
@@ -110,4 +188,9 @@ let suite =
    "test_identity">::               test_identity;
    qc_additive_identity;
    qc_multiplicative_identity;
+   "test_commutativity">::          test_commutativity;
+   qc_add_associativity;
+   qc_mul_associativity;
+   "test_distributivity">::         test_distributivity;
+   qc_add_distributivity;
   ]
