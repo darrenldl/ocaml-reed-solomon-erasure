@@ -1,3 +1,6 @@
+type error = AlreadySet
+           | NotSquare
+
 type tree = { mutable matrix   : Matrix.t option;
               children         : tree option array;
             }
@@ -5,11 +8,6 @@ type tree = { mutable matrix   : Matrix.t option;
 type t = {  root         : tree;
             total_shards : int;
          }
-
-let make (data_shards : int) (parity_shards : int) : t =
-  { root         = { matrix   = Some (Matrix.identity data_shards);
-                     children = Array.make (data_shards + parity_shards) None; };
-    total_shards = data_shards + parity_shards; }
 
 module Tree : sig
   val get_child : tree -> int -> int -> int -> tree
@@ -74,3 +72,28 @@ end = struct
           (requested_index + 1)
       )
 end
+
+let make (data_shards : int) (parity_shards : int) : t =
+  { root         = { matrix   = Some (Matrix.identity data_shards);
+                     children = Array.make (data_shards + parity_shards) None; };
+    total_shards = data_shards + parity_shards; }
+
+let get_inverted_matrix (tree : t) (invalid_indices : int list) : Matrix.t option =
+  match invalid_indices with
+  | [] -> tree.root.matrix
+  | l  -> Tree.get_inverted_matrix tree.root l tree.total_shards 0
+
+let insert_inverted_matrix
+    (tree            : t)
+    (invalid_indices : int list)
+    (matrix          : Matrix.t)
+  : (unit, error) result =
+  if not (Matrix.is_square matrix) then
+    Error NotSquare
+  else (
+    match invalid_indices with
+    (* If no invalid indices were given then we are done because the
+     * root node is already set with the identity matrix. *)
+    | [] -> Error AlreadySet
+    | l  -> Ok (Tree.insert_inverted_matrix tree.root matrix l tree.total_shards 0)
+  )
