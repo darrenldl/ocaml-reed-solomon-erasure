@@ -43,7 +43,25 @@ let log_table_same_as_backblaze test_ctxt =
     assert_equal log_table.%(i) backblaze_log_table.%(i)
   done
 
+let test_associativity test_ctxt =
+  for a = 0 to (256) - 1 do
+    let a = char_of_int a in
+    for b = 0 to (256) - 1 do
+      let b = char_of_int b in
+      for c = 0 to (256) - 1 do
+        let c = char_of_int c in
+        let x = add a (add b c) in
+        let y = add (add b c) a in
+        assert_equal x y;
+        let x = mul a (mul b c) in
+        let y = mul (mul a b) c in
+        assert_equal x y;
+      done
+    done
+  done
+
 let suite =
   "galois_tests">:::
   ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
+   "test_associativity">::          test_associativity;
   ]
