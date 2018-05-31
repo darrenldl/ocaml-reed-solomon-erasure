@@ -169,13 +169,13 @@ let test_galois test_ctxt =
   let input = "\000\001\002\003\004\005\006\010\050\100\150\174\201\255\099\032\067\085\200\199\198\197\196\195\194\193\192\191\190\189\188\187\186\185" in
   let output1 = Bytes.make (String.length input) '\000' in
   let output2 = Bytes.make (String.length input) '\000' in
-  mul_slice (char_of_int 52) (String input) output1;
+  mul_slice (char_of_int 25) (String input) output1;
   let expect = "\x00\x19\x32\x2b\x64\x7d\x56\xfa\xb8\x6d\xc7\x85\xc3\x1f\x22\x07\x25\xfe\xda\x5d\x44\x6f\x76\x39\x20\x0b\x12\x11\x08\x23\x3a\x75\x6c\x47" in
-  for i = 0 to (String.length input) do
+  for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output1.%(i)
   done;
-  mul_slice_pure_ocaml (char_of_int 52) (String input) output2;
-  for i = 0 to (String.length input) do
+  mul_slice_pure_ocaml (char_of_int 25) (String input) output2;
+  for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output1.%(i)
   done
 
@@ -193,4 +193,5 @@ let suite =
    qc_mul_associativity;
    "test_distributivity">::         test_distributivity;
    qc_add_distributivity;
+   "test_galois">::                 test_galois;
   ]
