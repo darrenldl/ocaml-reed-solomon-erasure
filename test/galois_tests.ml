@@ -286,6 +286,7 @@ let suite =
    qc_mul_associativity;
    "test_distributivity">::               test_distributivity;
    qc_add_distributivity;
+   "test_exp">::                          test_exp;
    "test_galois">::                       test_galois;
    "test_slice_add">::                    test_slice_add;
    "test_div_a_is_0">::                   test_div_a_is_0;
