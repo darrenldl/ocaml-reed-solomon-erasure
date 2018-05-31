@@ -72,10 +72,26 @@ let qc_mul_associativity =
        QCheck.(triple char char char)
        (fun (a,b,c) -> mul a (mul b c) = mul (mul a b) c))
 
+let test_identity test_ctxt =
+  let char_0 = char_of_int 0 in
+  let char_1 = char_of_int 1 in
+  for a = 0 to (256) - 1 do
+    let a = char_of_int a in
+    let b = sub char_0 a in
+    let c = sub a b in
+    assert_equal c char_0;
+    if a <> char_0 then (
+      let b = div char_1 a in
+      let c = mul a b in
+      assert_equal c char_1;
+    )
+  done
+
 let suite =
   "galois_tests">:::
   ["log_table_same_as_backblaze">:: log_table_same_as_backblaze;
    "test_associativity">::          test_associativity;
    qc_add_associativity;
    qc_mul_associativity;
+   "test_identity">::               test_identity;
   ]
