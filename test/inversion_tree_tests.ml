@@ -158,7 +158,7 @@ let make_random_invalid_indices
 
 let qc_tree_same_as_hashtbl =
   QCheck_runner.to_ounit2_test
-    (QCheck.Test.make ~count:3000 ~name:"qc_tree_same_as_hashtbl"
+    (QCheck.Test.make ~count:2000 ~name:"qc_tree_same_as_hashtbl"
        QCheck.(triple (int_range 1 255) (int_range 1 255) (triple (int_range 5 100) (list_of_size (QCheck.Gen.int_range 0 100) small_nat) (int_range 2 10)))
        (fun (data_shards, parity_shards, (matrix_count, iter_order, read_count)) ->
           QCheck.assume (data_shards > 0);
