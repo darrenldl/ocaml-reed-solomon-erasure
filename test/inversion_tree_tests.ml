@@ -164,7 +164,6 @@ let qc_tree_same_as_hashtbl =
           QCheck.assume (data_shards > 0);
           QCheck.assume (parity_shards > 0);
           QCheck.assume (data_shards + parity_shards <= 256);
-          QCheck.assume (matrix_count > 0);
           let tree = make data_shards parity_shards in
           let map = Hashtbl.create matrix_count in
 
