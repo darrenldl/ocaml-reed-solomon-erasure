@@ -1,5 +1,7 @@
 # ocaml-reed-solomon-erasure
-OCaml port of [reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-erasure)
+OCaml implementation of Reed-Solomon erasure coding
+
+This is a port of [reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-erasure), which is a port of several other libraries
 
 #### Port progress
 - [x] `galois.rs` -> `galois.ml` + `galois.mli`
@@ -14,3 +16,26 @@ OCaml port of [reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-e
 - [x] `inversion_tree_tests.rs` -> `inversion_tree_tests.ml`
 - [ ] `errors_tests.rs` -> `errors_tests.ml`
 - [ ] `lib_tests.rs` -> `lib_tests.ml`
+
+## Usage
+TODO
+
+## Example
+TODO
+
+## Performance
+
+## Changelog
+[Changelog](CHANGELOG.md)
+
+## Contributions
+Contributions are welcome. Note that by submitting contributions, you agree to license your work under the same license used by this project(MIT).
+
+## Notes
+#### Code quality review
+If you'd like to evaluate the quality of this library, you may find audit comments helpful.
+
+Simply search for "AUDIT" to see the dev notes that are aimed at facilitating code reviews.
+
+## License
+All files are released under the MIT License
