@@ -151,7 +151,150 @@ let check_option_shards_and_get_size (slices : bytes option array) : (int, error
         Error IncorrectShardSize
     )
 
+module Check = struct
+  type check_slice_index_op = All | Data | Parity
+  type check_piece_count_op = All | Data | Parity | ParityBuf
+
+  let check_slice_index
+      (r     : reed_solomon)
+      (op    : check_slice_index_op)
+      (index : int)
+    : (unit, error) result =
+    let ub = match op with
+      | All    -> r.total_shard_count
+      | Data   -> r.data_shard_count
+      | Parity -> r.parity_shard_count
+    in
+
+    if 0 <= index && index < ub then
+      Ok ()
+    else
+      Error InvalidIndex
+
+  let check_piece_count
+      (r      : reed_solomon)
+      (op     : check_piece_count_op)
+      (pieces : 'a array)
+    : (unit, error) result =
+    let exact_match = match op with
+      | All       -> r.total_shard_count
+      | Data      -> r.data_shard_count
+      | Parity    -> r.parity_shard_count
+      | ParityBuf -> r.parity_shard_count
+    in
+
+    let too_few_error = match op with
+      | All       -> TooFewShards
+      | Data      -> TooFewDataShards
+      | Parity    -> TooFewParityShards
+      | ParityBuf -> TooFewBufferShards
+    in
+
+    let too_many_error = match op with
+      | All       -> TooManyShards
+      | Data      -> TooManyDataShards
+      | Parity    -> TooManyParityShards
+      | ParityBuf -> TooManyBufferShards
+    in
+
+    let piece_count = Array.length pieces in
+
+    if      piece_count < exact_match then
+      Error too_few_error
+    else if piece_count > exact_match then
+      Error too_many_error
+    else
+      Ok ()
+
+  let check_if_slice_is_of_size (size : int) (acc : bool) (slice : bytes) : bool =
+    acc && size = Bytes.length slice
+
+  let check_slices_multi
+      (r      : reed_solomon)
+      (slices : bytes array)
+    : (unit, error) result =
+    let size = Array.length slices in
+    if size = 0 then
+      Error EmptyShard
+    else
+      let check_if_slice_is_of_size_partial =
+        check_if_slice_is_of_size size
+      in
+
+      let all_sizes_same =
+        Array.fold_left
+          check_if_slice_is_of_size_partial
+          false
+          slices
+      in
+
+      if all_sizes_same then
+        Ok ()
+      else
+        Error IncorrectShardSize
+
+  let check_slices_single
+      (slice_left  : bytes)
+      (slice_right : bytes)
+    : (unit, error) result =
+    if Bytes.length slice_left = Bytes.length slice_right then
+      Ok ()
+    else
+      Error IncorrectShardSize
+
+  let check_slices_multi_single
+      (r      : reed_solomon)
+      (slices : bytes array)
+      (slice  : bytes)
+    : (unit, error) result =
+    match check_slices_multi r slices with
+    | Error _ as e -> e
+    | Ok _         -> check_slices_single slices.(0) slice
+
+  let check_slices_multi_multi
+      (r            : reed_solomon)
+      (slices_left  : bytes array)
+      (slices_right : bytes array)
+    : (unit, error) result =
+    match check_slices_multi r slices_left with
+    | Error _ as e -> e
+    | Ok _ ->
+      match check_slices_multi r slices_right with
+      | Error _ as e -> e
+      | Ok _ ->
+        check_slices_single slices_left.(0) slices_right.(0)
+end
+
 module Encode = struct
+  module StringInput = struct
+    let encode_single_sep
+        (r           : reed_solomon)
+        (i_data      : int)
+        (single_data : string)
+        (parity      : bytes array)
+      : (unit, error) result =
+      let index_check_result       = Check.check_slice_index r Check.Data   i_data in
+      let piece_count_check_result = Check.check_piece_count r Check.Parity parity in
+      let slices_check_result      = Check.check_slices_multi_single r parity single_data in
+      match index_check_result with
+      | Error _ as e -> e
+      | Ok _ ->
+        match piece_count_check_result with
+        | Error _ as e -> e
+        | Ok _ ->
+          match slices_check_result with
+          | Error _ as e -> e
+          | Ok _ ->
+            begin
+              let parity_rows = get_parity_rows r in
+
+              Ok (code_single_slice
+                    parity_rows
+                    i_data
+                    single_data
+                    parity)
+            end
+  end
 end
 
 module Verify = struct
