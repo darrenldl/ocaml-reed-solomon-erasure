@@ -20,10 +20,4 @@ let unsafe_to_string (data : t) : string =
   | `String s -> s
 
 let eq (a : t) (b : t) : bool =
-  let length_a = length a in
-
-  length_a = length b
-  &&
-  begin
-    unsafe_to_string a = unsafe_to_string b
-  end
+  unsafe_to_string a = unsafe_to_string b
