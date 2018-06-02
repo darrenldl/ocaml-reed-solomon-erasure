@@ -90,7 +90,11 @@ let check_some_slices_with_buffer
     Data.eq (`Bytes expected_parity_shard) to_check.(i)
   in
 
-  Array.mem true
-    (Array.mapi
-       check_single
-       buffer)
+  let at_least_one_mismatch_present =
+    Array.mem false
+      (Array.mapi
+         check_single
+         buffer)
+  in
+
+  not at_least_one_mismatch_present
