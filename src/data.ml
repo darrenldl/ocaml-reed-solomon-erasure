@@ -21,3 +21,9 @@ let unsafe_to_string (data : t) : string =
 
 let eq (a : t) (b : t) : bool =
   unsafe_to_string a = unsafe_to_string b
+
+let of_string (data : string) : t =
+  `String data
+
+let of_bytes (data : bytes) : t =
+  `Bytes data

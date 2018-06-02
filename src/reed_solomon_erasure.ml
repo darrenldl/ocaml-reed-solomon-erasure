@@ -142,21 +142,6 @@ let check_option_shards_and_get_size (slices : bytes option array) : (int, error
         Error IncorrectShardSize
     )
 
-type check_slices_op      = Single | Multi
-type check_slice_index_op = All | Data | Parity
-type check_piece_count_op = All | Data | Parity | ParityBuf
-
-(* let check_slices
- *     (slices : data array)
- * 
- * let check_slice_index
- *     (op          : check_slice_index_op)
- *     (r           : reed_solomon)
- *     (i_data      : int)
- *     (single_data : data)
- *     (parity      : bytes array)
- *   : (unit, error) result = *)
-
 module Encode = struct
 end
 
