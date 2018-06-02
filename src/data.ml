@@ -20,28 +20,19 @@ let eq (a : t) (b : t) : bool =
   length_a = length b
   &&
   begin
-    let result  = ref true in
-    (match a with
-     | `String s_a ->
-       (match b with
-        | `String s_b -> result := s_a = s_b
-        | `Bytes  b_b ->
-          let counter = ref 0 in
-          while !counter < length_a && !result do
-            if s_a.[!counter] <> b_b.%(!counter) then
-              result := false
-          done
-       )
-     | `Bytes  b_a ->
-       (match b with
-        | `String s_b ->
-          let counter = ref 0 in
-          while !counter < length_a && !result do
-            if b_a.%(!counter) <> s_b.[!counter] then
-              result := false
-          done
-        | `Bytes  b_b -> result := b_a = b_b
-       )
-    );
-    !result
+    match a with
+    | `String s_a ->
+      (match b with
+       | `String s_b -> s_a = s_b
+       | `Bytes  b_b ->
+         let s_b = Bytes.unsafe_to_string b_b in
+         s_a = s_b
+      )
+    | `Bytes  b_a ->
+      (match b with
+       | `String s_b ->
+         let s_a = Bytes.unsafe_to_string b_a in
+         s_a = s_b
+       | `Bytes  b_b -> b_a = b_b
+      )
   end
