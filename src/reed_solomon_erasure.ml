@@ -76,3 +76,21 @@ let code_some_slices
   for i_input = 0 to (r.data_shard_count) - 1 do
     code_single_slice matrix_rows i_input inputs.(i_input) outputs
   done
+
+let check_some_slices_with_buffer
+    (r           : reed_solomon)
+    (matrix_rows : bytes array)
+    (inputs      : data array)
+    (to_check    : data array)
+    (buffer      : bytes array)
+  : bool =
+  code_some_slices r matrix_rows inputs buffer;
+
+  let check_single i expected_parity_shard =
+    Data.eq (`Bytes expected_parity_shard) to_check.(i)
+  in
+
+  Array.mem true
+    (Array.mapi
+       check_single
+       buffer)
