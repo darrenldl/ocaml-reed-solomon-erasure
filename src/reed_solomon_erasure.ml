@@ -4,47 +4,60 @@ open Ops
 
 type data = [ `String of string | `Bytes of bytes ]
 
-type reed_solomon = {
-  data_shard_count   : int;
-  parity_shard_count : int;
-  total_shard_count  : int;
-  matrix             : Matrix.t;
-  tree               : Inversion_tree.t;
-}
+module ReedSolomon = struct
+  type t = {
+    data_shard_count   : int;
+    parity_shard_count : int;
+    total_shard_count  : int;
+    matrix             : Matrix.t;
+    tree               : Inversion_tree.t;
+  }
 
-let build_matrix (data_shards : int) (total_shards : int) : Matrix.t =
-  let vandermonde = Matrix.vandermonde total_shards data_shards in
+  let build_matrix (data_shards : int) (total_shards : int) : Matrix.t =
+    let vandermonde = Matrix.vandermonde total_shards data_shards in
 
-  let top = Matrix.sub_matrix vandermonde 0 0 data_shards data_shards in
+    let top = Matrix.sub_matrix vandermonde 0 0 data_shards data_shards in
 
-  Matrix.multiply vandermonde top
+    Matrix.multiply vandermonde top
 
-let make (data_shards : int) (parity_shards : int) : (reed_solomon, error) result =
-  if      data_shards   = 0 then
-    Error TooFewDataShards
-  else if parity_shards = 0 then
-    Error TooFewParityShards
-  else if data_shards + parity_shards > 256 then
-    Error TooManyShards
-  else (
-    let total_shards = data_shards + parity_shards in
-    let matrix       = build_matrix data_shards total_shards in
+  let make (data_shards : int) (parity_shards : int) : (t, error) result =
+    if      data_shards   = 0 then
+      Error TooFewDataShards
+    else if parity_shards = 0 then
+      Error TooFewParityShards
+    else if data_shards + parity_shards > 256 then
+      Error TooManyShards
+    else (
+      let total_shards = data_shards + parity_shards in
+      let matrix       = build_matrix data_shards total_shards in
 
-    Ok { data_shard_count   = data_shards;
-         parity_shard_count = parity_shards;
-         total_shard_count  = total_shards;
-         matrix;
-         tree               = Inversion_tree.make data_shards parity_shards; }
-  )
+      Ok { data_shard_count   = data_shards;
+           parity_shard_count = parity_shards;
+           total_shard_count  = total_shards;
+           matrix;
+           tree               = Inversion_tree.make data_shards parity_shards; }
+    )
 
-let data_shard_count (r : reed_solomon) : int =
-  r.data_shard_count
+  let data_shard_count (r : t) : int =
+    r.data_shard_count
 
-let parity_shard_count (r : reed_solomon) : int =
-  r.parity_shard_count
+  let parity_shard_count (r : t) : int =
+    r.parity_shard_count
 
-let total_shard_count (r : reed_solomon) : int =
-  r.total_shard_count
+  let total_shard_count (r : t) : int =
+    r.total_shard_count
+
+  let get_parity_rows (r : t) : bytes array =
+    let parity_rows = Array.make r.parity_shard_count Bytes.empty in
+
+    for i = r.data_shard_count to (r.total_shard_count) - 1 do
+      parity_rows.(i) <- Matrix.get_row r.matrix i
+    done;
+
+    parity_rows
+end
+
+type reed_solomon = ReedSolomon.t
 
 let code_single_slice
     (matrix_rows : bytes array)
