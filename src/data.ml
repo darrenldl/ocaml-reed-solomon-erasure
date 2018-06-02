@@ -14,25 +14,16 @@ let get (data : t) (i : int) : char =
 
 let ( .%{} ) = get
 
+let unsafe_to_string (data : t) : string =
+  match data with
+  | `Bytes  b -> Bytes.unsafe_to_string b
+  | `String s -> s
+
 let eq (a : t) (b : t) : bool =
   let length_a = length a in
 
   length_a = length b
   &&
   begin
-    match a with
-    | `String s_a ->
-      (match b with
-       | `String s_b -> s_a = s_b
-       | `Bytes  b_b ->
-         let s_b = Bytes.unsafe_to_string b_b in
-         s_a = s_b
-      )
-    | `Bytes  b_a ->
-      (match b with
-       | `String s_b ->
-         let s_a = Bytes.unsafe_to_string b_a in
-         s_a = s_b
-       | `Bytes  b_b -> b_a = b_b
-      )
+    unsafe_to_string a = unsafe_to_string b
   end
