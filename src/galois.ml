@@ -41,12 +41,12 @@ let exp (a : char) (n : int) : char =
 
 let pure_ocaml_unroll = 4
 
-let mul_slice_pure_ocaml (c : char) (input : Data.t) (out : bytes) =
+let mul_slice_pure_ocaml (c : char) (input : string) (out : bytes) =
   let mt = mul_table.(c |> int_of_char) in
 
-  assert(Data.length input = Bytes.length out);
+  assert(String.length input = Bytes.length out);
 
-  let len = Data.length input in
+  let len = String.length input in
 
   if len > 0 then (
     let n = ref 0 in
@@ -54,26 +54,26 @@ let mul_slice_pure_ocaml (c : char) (input : Data.t) (out : bytes) =
     if len > pure_ocaml_unroll then (
       let len_minus_unroll = len - pure_ocaml_unroll in
       while !n < len_minus_unroll do
-        out.%(!n)   <- mt.[input.%{!n}   |> int_of_char];
-        out.%(!n+1) <- mt.[input.%{!n+1} |> int_of_char];
-        out.%(!n+2) <- mt.[input.%{!n+2} |> int_of_char];
-        out.%(!n+3) <- mt.[input.%{!n+3} |> int_of_char];
+        out.%(!n)   <- mt.[input.[!n]   |> int_of_char];
+        out.%(!n+1) <- mt.[input.[!n+1] |> int_of_char];
+        out.%(!n+2) <- mt.[input.[!n+2] |> int_of_char];
+        out.%(!n+3) <- mt.[input.[!n+3] |> int_of_char];
 
         n := !n + pure_ocaml_unroll;
       done
     );
     while !n < len do
-      out.%(!n) <- mt.[input.%{!n} |> int_of_char];
+      out.%(!n) <- mt.[input.[!n] |> int_of_char];
       n := !n + 1;
     done
   )
 
-let mul_slice_xor_pure_ocaml (c : char) (input : Data.t) (out : bytes) : unit =
+let mul_slice_xor_pure_ocaml (c : char) (input : string) (out : bytes) : unit =
   let mt = mul_table.(c |> int_of_char) in
 
-  assert(Data.length input == Bytes.length out);
+  assert(String.length input == Bytes.length out);
 
-  let len = Data.length input in
+  let len = String.length input in
 
   if len > 0 then (
     let n = ref 0 in
@@ -81,24 +81,24 @@ let mul_slice_xor_pure_ocaml (c : char) (input : Data.t) (out : bytes) : unit =
     if len > pure_ocaml_unroll then (
       let len_minus_unroll = len - pure_ocaml_unroll in
       while !n < len_minus_unroll do
-        out.%(!n)   <- ((mt.[input.%{!n}   |> int_of_char] |> int_of_char) lxor (out.%(!n)   |> int_of_char)) |> char_of_int;
-        out.%(!n+1) <- ((mt.[input.%{!n+1} |> int_of_char] |> int_of_char) lxor (out.%(!n+1) |> int_of_char)) |> char_of_int;
-        out.%(!n+2) <- ((mt.[input.%{!n+2} |> int_of_char] |> int_of_char) lxor (out.%(!n+2) |> int_of_char)) |> char_of_int;
-        out.%(!n+3) <- ((mt.[input.%{!n+3} |> int_of_char] |> int_of_char) lxor (out.%(!n+3) |> int_of_char)) |> char_of_int;
+        out.%(!n)   <- ((mt.[input.[!n]   |> int_of_char] |> int_of_char) lxor (out.%(!n)   |> int_of_char)) |> char_of_int;
+        out.%(!n+1) <- ((mt.[input.[!n+1] |> int_of_char] |> int_of_char) lxor (out.%(!n+1) |> int_of_char)) |> char_of_int;
+        out.%(!n+2) <- ((mt.[input.[!n+2] |> int_of_char] |> int_of_char) lxor (out.%(!n+2) |> int_of_char)) |> char_of_int;
+        out.%(!n+3) <- ((mt.[input.[!n+3] |> int_of_char] |> int_of_char) lxor (out.%(!n+3) |> int_of_char)) |> char_of_int;
 
         n := !n + pure_ocaml_unroll;
       done
     );
     while !n < len do
-        out.%(!n) <- ((mt.[input.%{!n} |> int_of_char] |> int_of_char) lxor (out.%(!n) |> int_of_char)) |> char_of_int;
+        out.%(!n) <- ((mt.[input.[!n] |> int_of_char] |> int_of_char) lxor (out.%(!n) |> int_of_char)) |> char_of_int;
         n := !n + 1;
     done
   )
 
-let slice_xor (input : Data.t) (out : bytes) : unit =
-  assert(Data.length input == Bytes.length out);
+let slice_xor (input : string) (out : bytes) : unit =
+  assert(String.length input == Bytes.length out);
 
-  let len = Data.length input in
+  let len = String.length input in
 
   if len > 0 then (
     let n = ref 0 in
@@ -106,16 +106,16 @@ let slice_xor (input : Data.t) (out : bytes) : unit =
     if len > pure_ocaml_unroll then (
       let len_minus_unroll = len - pure_ocaml_unroll in
       while !n < len_minus_unroll do
-        out.%(!n)   <- ((input.%{!n}   |> int_of_char) lxor (out.%(!n)   |> int_of_char)) |> char_of_int;
-        out.%(!n+1) <- ((input.%{!n+1} |> int_of_char) lxor (out.%(!n+1) |> int_of_char)) |> char_of_int;
-        out.%(!n+2) <- ((input.%{!n+2} |> int_of_char) lxor (out.%(!n+2) |> int_of_char)) |> char_of_int;
-        out.%(!n+3) <- ((input.%{!n+3} |> int_of_char) lxor (out.%(!n+3) |> int_of_char)) |> char_of_int;
+        out.%(!n)   <- ((input.[!n]   |> int_of_char) lxor (out.%(!n)   |> int_of_char)) |> char_of_int;
+        out.%(!n+1) <- ((input.[!n+1] |> int_of_char) lxor (out.%(!n+1) |> int_of_char)) |> char_of_int;
+        out.%(!n+2) <- ((input.[!n+2] |> int_of_char) lxor (out.%(!n+2) |> int_of_char)) |> char_of_int;
+        out.%(!n+3) <- ((input.[!n+3] |> int_of_char) lxor (out.%(!n+3) |> int_of_char)) |> char_of_int;
 
         n := !n + pure_ocaml_unroll;
       done
     );
     while !n < len do
-      out.%(!n) <- ((input.%{!n} |> int_of_char) lxor (out.%(!n) |> int_of_char)) |> char_of_int;
+      out.%(!n) <- ((input.[!n] |> int_of_char) lxor (out.%(!n) |> int_of_char)) |> char_of_int;
       n := !n + 1;
     done
   )

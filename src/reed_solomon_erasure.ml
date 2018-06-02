@@ -58,14 +58,14 @@ let get_parity_rows (r : reed_solomon) : bytes array =
 let code_single_slice
     (matrix_rows : bytes array)
     (i_input     : int)
-    (input       : data)
+    (input       : string)
     (outputs     : bytes array)
   : unit =
   let code_single_output matrix_rows input i_row output =
     let matrix_row_to_use = matrix_rows.(i_row).%(i_input) in
 
     if i_input = 0 then
-      Galois.mul_slice    matrix_row_to_use input output
+      Galois.mul_slice     matrix_row_to_use input output
     else
       Galois.mul_slice_xor matrix_row_to_use input output
   in
@@ -79,7 +79,7 @@ let code_single_slice
 let code_some_slices
     (r           : reed_solomon)
     (matrix_rows : bytes array)
-    (inputs      : data array)
+    (inputs      : string array)
     (outputs     : bytes array)
   : unit =
   for i_input = 0 to (r.data_shard_count) - 1 do
@@ -89,7 +89,7 @@ let code_some_slices
 let check_some_slices_with_buffer
     (r           : reed_solomon)
     (matrix_rows : bytes array)
-    (inputs      : data array)
+    (inputs      : string array)
     (to_check    : data array)
     (buffer      : bytes array)
   : bool =
