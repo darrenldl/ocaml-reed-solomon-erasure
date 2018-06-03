@@ -169,42 +169,42 @@ let test_galois test_ctxt =
   let input = "\000\001\002\003\004\005\006\010\050\100\150\174\201\255\099\032\067\085\200\199\198\197\196\195\194\193\192\191\190\189\188\187\186\185" in
   let output1 = Bytes.make (String.length input) '\000' in
   let output2 = Bytes.make (String.length input) '\000' in
-  mul_slice (char_of_int 25) (`String input) output1;
+  mul_slice (char_of_int 25) input output1;
   let expect = "\x00\x19\x32\x2b\x64\x7d\x56\xfa\xb8\x6d\xc7\x85\xc3\x1f\x22\x07\x25\xfe\xda\x5d\x44\x6f\x76\x39\x20\x0b\x12\x11\x08\x23\x3a\x75\x6c\x47" in
   for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output1.%(i)
   done;
-  mul_slice_pure_ocaml (char_of_int 25) (`String input) output2;
+  mul_slice_pure_ocaml (char_of_int 25) input output2;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output2.%(i)
   done;
 
   let expect_xor = "\x00\x2d\x5a\x77\xb4\x99\xee\x2f\x79\xf2\x07\x51\xd4\x19\x31\xc9\xf8\xfc\xf9\x4f\x62\x15\x38\xfb\xd6\xa1\x8c\x96\xbb\xcc\xe1\x22\x0f\x78" in
-  mul_slice_xor (char_of_int 52) (`String input) output1;
+  mul_slice_xor (char_of_int 52) input output1;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect_xor.[i] output1.%(i)
   done;
-  mul_slice_xor_pure_ocaml (char_of_int 52) (`String input) output2;
+  mul_slice_xor_pure_ocaml (char_of_int 52) input output2;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect_xor.[i] output2.%(i)
   done;
 
   let expect = "\x00\xb1\x7f\xce\xfe\x4f\x81\x9e\x03\x06\xe8\x75\xbd\x40\x36\xa3\x95\xcb\x0c\xdd\x6c\xa2\x13\x23\x92\x5c\xed\x1b\xaa\x64\xd5\xe5\x54\x9a" in
-  mul_slice (char_of_int 177) (`String input) output1;
+  mul_slice (char_of_int 177) input output1;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output1.%(i)
   done;
-  mul_slice_pure_ocaml (char_of_int 177) (`String input) output2;
+  mul_slice_pure_ocaml (char_of_int 177) input output2;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect.[i] output2.%(i)
   done;
 
   let expect_xor = "\x00\xc4\x95\x51\x37\xf3\xa2\xfb\xec\xc5\xd0\xc7\x53\x88\xa3\xa5\x06\x78\x97\x9f\x5b\x0a\xce\xa8\x6c\x3d\xf9\xdf\x1b\x4a\x8e\xe8\x2c\x7d" in
-  mul_slice_xor (char_of_int 117) (`String input) output1;
+  mul_slice_xor (char_of_int 117) input output1;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect_xor.[i] output1.%(i)
   done;
-  mul_slice_xor_pure_ocaml (char_of_int 117) (`String input) output2;
+  mul_slice_xor_pure_ocaml (char_of_int 117) input output2;
   for i = 0 to (String.length input) - 1 do
     assert_equal expect_xor.[i] output2.%(i)
   done;
@@ -222,7 +222,7 @@ let test_slice_add test_ctxt =
        for i = 0 to (len) - 1 do
          expect.%(i) <- char_of_int ((int_of_char input.[i]) lxor (int_of_char output.%(i)));
        done;
-       slice_xor (`String input) output;
+       slice_xor input output;
        for i = 0 to (len) - 1 do
          assert_equal expect.%(i) output.%(i);
        done;
@@ -230,7 +230,7 @@ let test_slice_add test_ctxt =
        for i = 0 to (len) - 1 do
          expect.%(i) <- char_of_int ((int_of_char input.[i]) lxor (int_of_char output.%(i)));
        done;
-       slice_xor (`String input) output;
+       slice_xor input output;
        for i = 0 to (len) - 1 do
          assert_equal expect.%(i) output.%(i);
        done;
@@ -256,8 +256,8 @@ let test_pure_ocaml_same_as_maybe_ffi test_ctxt =
       let output = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
       let output_copy = Bytes.copy output in
 
-      mul_slice            c (`Bytes input) output;
-      mul_slice_pure_ocaml c (`Bytes input) output_copy;
+      mul_slice            c (Bytes.unsafe_to_string input) output;
+      mul_slice_pure_ocaml c (Bytes.unsafe_to_string input) output_copy;
 
       assert_equal output output_copy;
     end;
@@ -265,8 +265,8 @@ let test_pure_ocaml_same_as_maybe_ffi test_ctxt =
       let output = Bytes.map (fun _ -> char_of_int (Random.int 256)) (Bytes.make len '\000') in
       let output_copy = Bytes.copy output in
 
-      mul_slice_xor            c (`Bytes input) output;
-      mul_slice_xor_pure_ocaml c (`Bytes input) output_copy;
+      mul_slice_xor            c (Bytes.unsafe_to_string input) output;
+      mul_slice_xor_pure_ocaml c (Bytes.unsafe_to_string input) output_copy;
 
       assert_equal output output_copy;
     end
