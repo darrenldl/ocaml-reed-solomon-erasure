@@ -345,6 +345,23 @@ module Encode = struct
 end
 
 module Verify = struct
+  (* AUDIT
+   *
+   * Error detection responsibilities
+   * Terminologies and symbols :
+   *   X =A, B, C=> Y : X delegates error checking responsibilities A, B, C to Y
+   *   X := A, B, C   : X needs to handle responsibilities A, B, C
+   *
+   * Verify methods
+   *
+   * `verify_shards`             =ALL=> `verify_shards_with_buffer`
+   * `verify_shards_with_buffer` =ALL=> `verify_with_buffer`
+   * `verify` :=
+   *   - check length of `slices` matches total shard count exactly
+   *   - check consistency of length of individual slices
+   *
+   *   Generates buffer then passes control to verify_with_buffer *)
+
   module StringInput = struct
   end
 
@@ -353,6 +370,28 @@ module Verify = struct
 end
 
 module Reconstruct = struct
+  (* AUDIT
+   *
+   * Error detection responsibilities
+   * Terminologies and symbols :
+   *   X =A, B, C=> Y : X delegates error checking responsibilities A, B, C to Y
+   *   X := A, B, C   : X needs to handle responsibilities A, B, C
+   *
+   * Reconstruct methods
+   *
+   * `reconstruct`             =ALL=> `reconstruct_internal`
+   * `reconstruct_data`        =ALL=> `reconstruct_internal`
+   * `reconstruct_shards`      =ALL=> `reconstruct_shards_internal`
+   * `reconstruct_data_shards` =ALL=> `reconstruct_shards_internal`
+   * `reconstruct_shards_internal` :=
+   *   - check length of `shards` matches total shard count exactly
+   *   - check at least one option shard is not `None`
+   *   - check consistency of length of individual option shards if exist
+   * `reconstruct_internal` :=
+   *   - check length of `slices` matches total shard count exactly
+   *   - check consistency of length of individual slices
+   *   - check length of `slice_present` matches length of `slices` *)
+
   module StringInput = struct
   end
 
