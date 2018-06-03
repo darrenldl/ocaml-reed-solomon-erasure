@@ -28,3 +28,19 @@ module Encode : sig
     val encode_single_sep : reed_solomon -> int -> bytes -> bytes array -> (unit, error) result
   end
 end
+
+module Verify : sig
+  module StringInput : sig
+  end
+
+  module ByteInput : sig
+  end
+end
+
+module Reconstruct : sig
+  module StringInput : sig
+  end
+
+  module ByteInput : sig
+  end
+end
