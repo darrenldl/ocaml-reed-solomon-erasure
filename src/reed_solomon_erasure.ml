@@ -300,10 +300,30 @@ module Encode = struct
                     parity)
             end
   end
+
+  module ByteInput = struct
+    let encode_single_sep
+        (r           : reed_solomon)
+        (i_data      : int)
+        (single_data : bytes)
+        (parity      : bytes array)
+      : (unit, error) result =
+      StringInput.encode_single_sep r i_data (Bytes.unsafe_to_string single_data) parity
+  end
 end
 
 module Verify = struct
+  module StringInput = struct
+  end
+
+  module ByteInput = struct
+  end
 end
 
 module Reconstruct = struct
+  module StringInput = struct
+  end
+
+  module ByteInput = struct
+  end
 end
