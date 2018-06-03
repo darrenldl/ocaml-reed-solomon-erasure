@@ -381,6 +381,8 @@ module Encode = struct
         (parity      : bytes array)
       : (unit, error) result =
       StringInput.encode_single_sep r i_data (Bytes.unsafe_to_string single_data) parity
+
+    let encode_single = StringInput.encode_single
   end
 end
 
