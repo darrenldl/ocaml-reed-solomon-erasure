@@ -1,4 +1,6 @@
 # ocaml-reed-solomon-erasure
+[Documentation](https://darrenldl.github.io/ocaml-reed-solomon-erasure/)
+
 OCaml implementation of Reed-Solomon erasure coding
 
 This is a port of [reed-solomon-erasure](https://github.com/darrenldl/reed-solomon-erasure), which is a port of several other libraries
