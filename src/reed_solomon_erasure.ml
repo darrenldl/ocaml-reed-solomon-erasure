@@ -271,6 +271,38 @@ module Checker = struct
 end
 
 module Encode = struct
+  (* AUDIT
+   *
+   * Error detection responsibilities
+   * Terminologies and symbols :
+   *   X =A, B, C=> Y : X delegates error checking responsibilities A, B, C to Y
+   *   X := A, B, C   : X needs to handle responsibilities A, B, C
+   *
+   * Encode methods
+   *
+   * `encode_single_shard`     =ALL=> `encode_single`
+   * `encode_single_shard_sep` =ALL=> `encode_single_sep`
+   * `encode_shards`           =ALL=> `encode`
+   * `encode_shards_sep`       =ALL=> `encode_sep`
+   * `encode_single` :=
+   *   - check index `i_data` within range [0, data shard count)
+   *   - check length of `slices` matches total shard count exactly
+   *   - check consistency of length of individual slices
+   * `encode_single_sep` :=
+   *   - check index `i_data` within range [0, data shard count)
+   *   - check length of `parity` matches parity shard count exactly
+   *   - check consistency of length of individual parity slices
+   *   - check length of `single_data` matches length of first parity slice
+   * `encode` :=
+   *   - check length of `slices` matches total shard count exactly
+   *   - check consistency of length of individual slices
+   * `encode_sep` :=
+   *   - check length of `data` matches data shard count exactly
+   *   - check length of `parity` matches parity shard count exactly
+   *   - check consistency of length of individual data slices
+   *   - check consistency of length of individual parity slices
+   *   - check length of first parity slice matches length of first data slice *)
+
   module StringInput = struct
     let encode_single_sep
         (r           : reed_solomon)
