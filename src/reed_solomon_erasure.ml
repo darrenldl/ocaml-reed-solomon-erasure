@@ -108,52 +108,52 @@ let check_some_slices_with_buffer
 
   not at_least_one_mismatch_present
 
-let check_option_shards_and_get_size (slices : bytes option array) : (int, error) result =
-  let update_size (size : int option ref) (slice : bytes option) =
-    match slice with
-    | None -> ()
-    | Some b ->
-      match !size with
-      | None   -> size := Some (Bytes.length b)
-      | Some _ -> ()
-  in
-
-  let size                = ref None in
-  let update_size_partial = update_size size in
-
-  (* record size of first shard *)
-  Array.iter
-    update_size_partial
-    slices;
-
-  let check_size_same (size : int) (acc : bool) (slice : bytes option) =
-    match slice with
-    | None   -> true
-    | Some b -> acc && size = Bytes.length b
-  in
-
-  match !size with
-  | None      -> Error TooFewShardsPresent
-  | Some size ->
-    if size = 0 then
-      Error EmptyShard
-    else (
-      let check_size_same_partial = check_size_same size in
-      let all_sizes_same =
-        Array.fold_left
-          check_size_same_partial
-          true
-          slices
-      in
-      if all_sizes_same then
-        Ok size
-      else
-        Error IncorrectShardSize
-    )
-
 module Check = struct
   type check_slice_index_op = All | Data | Parity
   type check_piece_count_op = All | Data | Parity | ParityBuf
+
+  let check_option_shards_and_get_size (slices : string option array) : (int, error) result =
+    let update_size (size : int option ref) (slice : string option) =
+      match slice with
+      | None -> ()
+      | Some b ->
+        match !size with
+        | None   -> size := Some (Bytes.length b)
+        | Some _ -> ()
+    in
+
+    let size                = ref None in
+    let update_size_partial = update_size size in
+
+    (* record size of first shard *)
+    Array.iter
+      update_size_partial
+      slices;
+
+    let check_size_same (size : int) (acc : bool) (slice : string option) =
+      match slice with
+      | None   -> true
+      | Some b -> acc && size = Bytes.length b
+    in
+
+    match !size with
+    | None      -> Error TooFewShardsPresent
+    | Some size ->
+      if size = 0 then
+        Error EmptyShard
+      else (
+        let check_size_same_partial = check_size_same size in
+        let all_sizes_same =
+          Array.fold_left
+            check_size_same_partial
+            true
+            slices
+        in
+        if all_sizes_same then
+          Ok size
+        else
+          Error IncorrectShardSize
+      )
 
   let check_slice_index
       (r     : reed_solomon)
@@ -206,12 +206,12 @@ module Check = struct
     else
       Ok ()
 
-  let check_if_slice_is_of_size (size : int) (acc : bool) (slice : bytes) : bool =
+  let check_if_slice_is_of_size (size : int) (acc : bool) (slice : string) : bool =
     acc && size = Bytes.length slice
 
   let check_slices_multi
       (r      : reed_solomon)
-      (slices : bytes array)
+      (slices : string array)
     : (unit, error) result =
     let size = Array.length slices in
     if size = 0 then
@@ -234,8 +234,8 @@ module Check = struct
         Error IncorrectShardSize
 
   let check_slices_single
-      (slice_left  : bytes)
-      (slice_right : bytes)
+      (slice_left  : string)
+      (slice_right : string)
     : (unit, error) result =
     if Bytes.length slice_left = Bytes.length slice_right then
       Ok ()
@@ -244,8 +244,8 @@ module Check = struct
 
   let check_slices_multi_single
       (r      : reed_solomon)
-      (slices : bytes array)
-      (slice  : bytes)
+      (slices : string array)
+      (slice  : string)
     : (unit, error) result =
     match check_slices_multi r slices with
     | Error _ as e -> e
@@ -253,8 +253,8 @@ module Check = struct
 
   let check_slices_multi_multi
       (r            : reed_solomon)
-      (slices_left  : bytes array)
-      (slices_right : bytes array)
+      (slices_left  : string array)
+      (slices_right : string array)
     : (unit, error) result =
     match check_slices_multi r slices_left with
     | Error _ as e -> e
