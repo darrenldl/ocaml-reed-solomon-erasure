@@ -15,7 +15,7 @@
  *   the Rust version which makes use of immutable and mutable
  *   references extensively to enforce safety.
  *
- *   The rough correspondence types to the Rust version is shown below
+ *   The rough correspondence of types to the Rust version is shown below
  *     - string       -> &[u8]
  *     - string array -> &[&[u8]]
  *     - bytes        -> &mut [u8]
