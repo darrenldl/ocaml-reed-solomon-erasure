@@ -1,5 +1,4 @@
 open Tables
-open Errors
 open Ops
 
 type data = [ `String of string | `Bytes of bytes ]
@@ -11,6 +10,24 @@ type reed_solomon = {
   matrix             : Matrix.t;
   tree               : Inversion_tree.t;
 }
+
+type error = TooFewShards
+           | TooManyShards
+           | TooFewDataShards
+           | TooManyDataShards
+           | TooFewParityShards
+           | TooManyParityShards
+           | TooFewBufferShards
+           | TooManyBufferShards
+           | IncorrectShardSize
+           | TooFewShardsPresent
+           | EmptyShard
+           | InvalidShardFlags
+           | InvalidIndex
+
+type sbs_error = TooManyCalls
+               | LeftoverShards
+               | RSError of error
 
 let build_matrix (data_shards : int) (total_shards : int) : Matrix.t =
   let vandermonde = Matrix.vandermonde total_shards data_shards in
