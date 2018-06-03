@@ -2,7 +2,7 @@
  *
  * Use of Bytes.unsafe_to_string
  *
- *   Some functions make use of Bytes.unsafe_to_string
+ *   Some functions make use of `Bytes.unsafe_to_string`
  *
  *   This is safe, however, as all use of Bytes.unsafe_to_string
  *   are used internall and used in one direction only
@@ -24,7 +24,19 @@
  *     It should be clear that the correspondence is not perfect as
  *     OCaml does not have borrow checker, and thus cannot enforce
  *     mutability constraints.
- *)
+ *
+ * Thread safety
+ *
+ *   The codec has a component that may mutate during operation,
+ *   `tree : Inversion_tree.t`, the component is a cache of
+ *   reconstruction matrices.
+ *
+ *   The component is currently NOT protected by any locks,
+ *   this the entire codec is not thread safe.
+ *
+ *   Protection will be added when OCaml is multicore enabled
+ *   and then it can be decided which concurrency primitives
+ *   are appropriate. *)
 
 open Tables
 open Ops
