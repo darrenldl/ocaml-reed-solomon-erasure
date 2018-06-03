@@ -27,9 +27,9 @@
  *
  * Thread safety
  *
- *   The codec has a component that may mutate during operation,
- *   `tree : Inversion_tree.t`, the component is a cache of
- *   reconstruction matrices.
+ *   The codec has a component, `tree : Inversion_tree.t`, that may
+ *   mutate during operation, the component is a cache of reconstruction
+ *   matrices.
  *
  *   The component is currently NOT protected by any locks,
  *   this the entire codec is not thread safe.
