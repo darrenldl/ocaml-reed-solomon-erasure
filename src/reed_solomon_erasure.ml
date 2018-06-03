@@ -108,7 +108,12 @@ let check_some_slices_with_buffer
 
   not at_least_one_mismatch_present
 
-module Check = struct
+module Helper = struct
+  let bytes_array_to_string_array (arr : bytes array) : string array =
+    Array.map Bytes.unsafe_to_string arr
+end
+
+module Checker = struct
   type check_slice_index_op = All | Data | Parity
   type check_piece_count_op = All | Data | Parity | ParityBuf
 
@@ -118,7 +123,7 @@ module Check = struct
       | None -> ()
       | Some b ->
         match !size with
-        | None   -> size := Some (Bytes.length b)
+        | None   -> size := Some (String.length b)
         | Some _ -> ()
     in
 
@@ -133,7 +138,7 @@ module Check = struct
     let check_size_same (size : int) (acc : bool) (slice : string option) =
       match slice with
       | None   -> true
-      | Some b -> acc && size = Bytes.length b
+      | Some b -> acc && size = String.length b
     in
 
     match !size with
@@ -207,7 +212,7 @@ module Check = struct
       Ok ()
 
   let check_if_slice_is_of_size (size : int) (acc : bool) (slice : string) : bool =
-    acc && size = Bytes.length slice
+    acc && size = String.length slice
 
   let check_slices_multi
       (r      : reed_solomon)
@@ -237,7 +242,7 @@ module Check = struct
       (slice_left  : string)
       (slice_right : string)
     : (unit, error) result =
-    if Bytes.length slice_left = Bytes.length slice_right then
+    if String.length slice_left = String.length slice_right then
       Ok ()
     else
       Error IncorrectShardSize
@@ -273,9 +278,9 @@ module Encode = struct
         (single_data : string)
         (parity      : bytes array)
       : (unit, error) result =
-      let index_check_result       = Check.check_slice_index r Check.Data   i_data in
-      let piece_count_check_result = Check.check_piece_count r Check.Parity parity in
-      let slices_check_result      = Check.check_slices_multi_single r parity single_data in
+      let index_check_result       = Checker.check_slice_index r Checker.Data   i_data in
+      let piece_count_check_result = Checker.check_piece_count r Checker.Parity parity in
+      let slices_check_result      = Checker.check_slices_multi_single r (Helper.bytes_array_to_string_array parity) single_data in
       match index_check_result with
       | Error _ as e -> e
       | Ok _ ->
