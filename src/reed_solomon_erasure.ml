@@ -1,6 +1,6 @@
 (* AUDIT
  *
- * Use of Bytes.unsafe_to_string
+ * Use of `Bytes.unsafe_to_string`
  *
  *   Some functions make use of `Bytes.unsafe_to_string`
  *
@@ -36,7 +36,18 @@
  *
  *   Protection will be added when OCaml is multicore enabled
  *   and then it can be decided which concurrency primitives
- *   are appropriate. *)
+ *   are appropriate.
+ *
+ * Use of `Array.sub`
+ *
+ *   `Array.sub` is similar to mutable slicing in Rust,
+ *   and when used with `bytes array`, it equates to shared
+ *   mutable ownership to the data.
+ *
+ *   This is not safe in general, but these calls are only
+ *   used to generate parameters for tail calls to other
+ *   functions in this library. So the biggest risk would be
+ *   incorrect indexing, this is addressed by `Helper.array_split_at` *)
 
 open Tables
 open Ops
@@ -387,7 +398,6 @@ module Encode = struct
           | Ok _ ->
             begin
               let parity_rows = get_parity_rows r in
-
               Ok (code_single_slice
                     parity_rows
                     i_data
@@ -417,6 +427,49 @@ module Encode = struct
               let input  = Bytes.unsafe_to_string slices.(i_data) in
               encode_single_sep r i_data input output
             end
+
+    let encode_sep
+        (r      : reed_solomon)
+        (data   : string array)
+        (parity : bytes array)
+      : (unit, error) result =
+      let piece_count_check_result_data   = Checker.check_piece_count r Checker.Data   data in
+      let piece_count_check_result_parity = Checker.check_piece_count r Checker.Parity parity in
+      let slices_check_result             = Checker.check_slices_multi_multi r data (Helper.bytes_array_to_string_array parity) in
+      match piece_count_check_result_data with
+      | Error _ as e -> e
+      | Ok _ ->
+        match piece_count_check_result_parity with
+        | Error _ as e -> e
+        | Ok _ ->
+          match slices_check_result with
+          | Error _ as e -> e
+          | Ok _ ->
+            begin
+              let parity_rows = get_parity_rows r in
+              Ok(code_some_slices
+                   r
+                   parity_rows
+                   data
+                   parity)
+            end
+
+    let encode
+        (r      : reed_solomon)
+        (slices : bytes array)
+      : (unit, error) result =
+      let piece_count_check_result = Checker.check_piece_count r Checker.All slices in
+      let slices_check_result      = Checker.check_slices_multi_multi r slices (Helper.bytes_array_to_string_array slices) in
+      match piece_count_check_result with
+      | Error _ as e -> e
+      | Ok _ ->
+        match slices_check_result with
+        | Error _ as e -> e
+        | Ok _ ->
+          begin
+            let input = Array.sub 
+          end
+
   end
 
   module ByteInput = struct
