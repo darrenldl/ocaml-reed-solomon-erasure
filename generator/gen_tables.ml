@@ -1,5 +1,3 @@
-#! /usr/bin/env ocaml
-
 open Printf
 
 let field_size : int = 256
