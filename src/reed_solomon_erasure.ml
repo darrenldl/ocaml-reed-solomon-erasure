@@ -465,7 +465,7 @@ module Encode = struct
         (slices : bytes array)
       : (unit, error) result =
       let piece_count_check_result = Checker.check_piece_count r Checker.All slices in
-      let slices_check_result      = Checker.check_slices_multi_multi r slices (Helper.bytes_array_to_string_array slices) in
+      let slices_check_result      = Checker.check_slices_multi r (Helper.bytes_array_to_string_array slices) in
       match piece_count_check_result with
       | Error _ as e -> e
       | Ok _ ->
@@ -477,7 +477,6 @@ module Encode = struct
               Helper.array_split_at slices r.data_shard_count in
             encode_sep r (Helper.bytes_array_to_string_array input) output
           end
-
   end
 
   module ByteInput = struct
