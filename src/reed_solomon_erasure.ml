@@ -117,13 +117,13 @@ module Checker = struct
   type check_slice_index_op = All | Data | Parity
   type check_piece_count_op = All | Data | Parity | ParityBuf
 
-  let check_option_shards_and_get_size (slices : string option array) : (int, error) result =
-    let update_size (size : int option ref) (slice : string option) =
+  let check_option_shards_and_get_size (slices : bytes option array) : (int, error) result =
+    let update_size (size : int option ref) (slice : bytes option) =
       match slice with
       | None -> ()
       | Some b ->
         match !size with
-        | None   -> size := Some (String.length b)
+        | None   -> size := Some (Bytes.length b)
         | Some _ -> ()
     in
 
@@ -135,10 +135,10 @@ module Checker = struct
       update_size_partial
       slices;
 
-    let check_size_same (size : int) (acc : bool) (slice : string option) =
+    let check_size_same (size : int) (acc : bool) (slice : bytes option) =
       match slice with
       | None   -> true
-      | Some b -> acc && size = String.length b
+      | Some b -> acc && size = Bytes.length b
     in
 
     match !size with
