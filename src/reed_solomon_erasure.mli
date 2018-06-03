@@ -19,7 +19,7 @@ type sbs_error = TooManyCalls
                | RSError of error
 
 module Encode : sig
-  module StringInput : sig
+  module StringData : sig
     val encode_single_sep : reed_solomon -> int -> string -> bytes array -> (unit, error) result
     (** [encode_single_sep r i_data single_data parity] *)
 
@@ -30,10 +30,10 @@ module Encode : sig
     val encode : reed_solomon -> bytes array -> (unit, error) result
   end
 
-  module ByteInput : sig
+  module BytesData : sig
     val encode_single_sep : reed_solomon -> int -> bytes -> bytes array -> (unit, error) result
     (** [encode_single_sep r i_data single_data parity]
-        This is a wrapper of {! StringInput.encode_single_sep } *)
+        This is a wrapper of {! StringData.encode_single_sep } *)
 
     val encode_single : reed_solomon -> int -> bytes array -> (unit, error) result
 
@@ -44,17 +44,17 @@ module Encode : sig
 end
 
 module Verify : sig
-  module StringInput : sig
+  module StringData : sig
   end
 
-  module ByteInput : sig
+  module BytesData : sig
   end
 end
 
 module Reconstruct : sig
-  module StringInput : sig
+  module StringData : sig
   end
 
-  module ByteInput : sig
+  module BytesData : sig
   end
 end

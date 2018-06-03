@@ -382,7 +382,7 @@ module Encode = struct
    *   - check consistency of length of individual parity slices
    *   - check length of first parity slice matches length of first data slice *)
 
-  module StringInput = struct
+  module StringData = struct
     let encode_single_sep
         (r           : reed_solomon)
         (i_data      : int)
@@ -479,25 +479,25 @@ module Encode = struct
           end
   end
 
-  module ByteInput = struct
+  module BytesData = struct
     let encode_single_sep
         (r           : reed_solomon)
         (i_data      : int)
         (single_data : bytes)
         (parity      : bytes array)
       : (unit, error) result =
-      StringInput.encode_single_sep r i_data (Bytes.unsafe_to_string single_data) parity
+      StringData.encode_single_sep r i_data (Bytes.unsafe_to_string single_data) parity
 
-    let encode_single = StringInput.encode_single
+    let encode_single = StringData.encode_single
 
     let encode_sep
         (r      : reed_solomon)
         (data   : bytes array)
         (parity : bytes array)
       : (unit, error) result =
-      StringInput.encode_sep r (Helper.bytes_array_to_string_array data) parity
+      StringData.encode_sep r (Helper.bytes_array_to_string_array data) parity
 
-    let encode = StringInput.encode
+    let encode = StringData.encode
   end
 end
 
@@ -519,10 +519,10 @@ module Verify = struct
    *
    *   Generates buffer then passes control to verify_with_buffer *)
 
-  module StringInput = struct
+  module StringData = struct
   end
 
-  module ByteInput = struct
+  module BytesData = struct
   end
 end
 
@@ -549,9 +549,9 @@ module Reconstruct = struct
    *   - check consistency of length of individual slices
    *   - check length of `slice_present` matches length of `slices` *)
 
-  module StringInput = struct
+  module StringData = struct
   end
 
-  module ByteInput = struct
+  module BytesData = struct
   end
 end
