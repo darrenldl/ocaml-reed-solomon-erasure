@@ -26,6 +26,8 @@ module Encode : sig
 
   module ByteInput : sig
     val encode_single_sep : reed_solomon -> int -> bytes -> bytes array -> (unit, error) result
+    (** [encode_single_sep r i_data single_data parity]
+        This is a wrapper of {! StringInput.encode_single_sep } *)
   end
 end
 
