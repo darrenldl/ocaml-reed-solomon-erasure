@@ -60,6 +60,7 @@ type reed_solomon = {
   parity_shard_count : int;
   total_shard_count  : int;
   matrix             : Matrix.t;
+  parity_rows        : bytes array;
   tree               : Inversion_tree.t;
 }
 
@@ -89,6 +90,17 @@ let build_matrix (data_shards : int) (total_shards : int) : Matrix.t =
   Matrix.multiply vandermonde top
 
 let make (data_shards : int) (parity_shards : int) : (reed_solomon, error) result =
+  let calc_parity_rows (data_shards : int) (parity_shards : int) (matrix : Matrix.t) : bytes array =
+    let total_shards = data_shards + parity_shards in
+    let parity_rows = Array.make parity_shards Bytes.empty in
+
+    for i = data_shards to total_shards - 1 do
+      parity_rows.(i) <- Matrix.get_row matrix i
+    done;
+
+    parity_rows
+  in
+
   if      data_shards   = 0 then
     Error TooFewDataShards
   else if parity_shards = 0 then
@@ -98,11 +110,13 @@ let make (data_shards : int) (parity_shards : int) : (reed_solomon, error) resul
   else (
     let total_shards = data_shards + parity_shards in
     let matrix       = build_matrix data_shards total_shards in
+    let parity_rows  = calc_parity_rows data_shards parity_shards matrix in
 
     Ok { data_shard_count   = data_shards;
          parity_shard_count = parity_shards;
          total_shard_count  = total_shards;
          matrix;
+         parity_rows;
          tree               = Inversion_tree.make data_shards parity_shards; }
   )
 
@@ -114,15 +128,6 @@ let parity_shard_count (r : reed_solomon) : int =
 
 let total_shard_count (r : reed_solomon) : int =
   r.total_shard_count
-
-let get_parity_rows (r : reed_solomon) : bytes array =
-  let parity_rows = Array.make r.parity_shard_count Bytes.empty in
-
-  for i = r.data_shard_count to (r.total_shard_count) - 1 do
-    parity_rows.(i) <- Matrix.get_row r.matrix i
-  done;
-
-  parity_rows
 
 let code_single_slice
     (matrix_rows : bytes array)
@@ -190,6 +195,14 @@ module Helper = struct
   let array_split_at (arr : 'a array) (split_at : int) : 'a array * 'a array =
     (Array.sub arr 0        split_at,
      Array.sub arr split_at (Array.length arr))
+
+  let make_blank_bytes (length : int) : bytes =
+    Bytes.make length '\000'
+
+  let make_buffer (rows : int) (length : int) : bytes array =
+    Array.map
+      (fun _ -> make_blank_bytes length)
+      (Array.make rows Bytes.empty)
 end
 
 module Checker = struct
@@ -382,7 +395,7 @@ module Encode = struct
    *   - check consistency of length of individual parity slices
    *   - check length of first parity slice matches length of first data slice *)
 
-  module StringData = struct
+  module String = struct
     let encode_single_sep
         (r           : reed_solomon)
         (i_data      : int)
@@ -402,9 +415,8 @@ module Encode = struct
           | Error _ as e -> e
           | Ok _ ->
             begin
-              let parity_rows = get_parity_rows r in
               Ok (code_single_slice
-                    parity_rows
+                    r.parity_rows
                     i_data
                     single_data
                     parity)
@@ -452,10 +464,9 @@ module Encode = struct
           | Error _ as e -> e
           | Ok _ ->
             begin
-              let parity_rows = get_parity_rows r in
               Ok(code_some_slices
                    r
-                   parity_rows
+                   r.parity_rows
                    data
                    parity)
             end
@@ -479,25 +490,25 @@ module Encode = struct
           end
   end
 
-  module BytesData = struct
+  module Bytes = struct
     let encode_single_sep
         (r           : reed_solomon)
         (i_data      : int)
         (single_data : bytes)
         (parity      : bytes array)
       : (unit, error) result =
-      StringData.encode_single_sep r i_data (Bytes.unsafe_to_string single_data) parity
+      String.encode_single_sep r i_data (Bytes.unsafe_to_string single_data) parity
 
-    let encode_single = StringData.encode_single
+    let encode_single = String.encode_single
 
     let encode_sep
         (r      : reed_solomon)
         (data   : bytes array)
         (parity : bytes array)
       : (unit, error) result =
-      StringData.encode_sep r (Helper.bytes_array_to_string_array data) parity
+      String.encode_sep r (Helper.bytes_array_to_string_array data) parity
 
-    let encode = StringData.encode
+    let encode = String.encode
   end
 end
 
@@ -519,10 +530,57 @@ module Verify = struct
    *
    *   Generates buffer then passes control to verify_with_buffer *)
 
-  module StringData = struct
+  module String = struct
+    let verify_with_buffer
+        (r      : reed_solomon)
+        (slices : string array)
+        (buffer : bytes array)
+      : (bool, error) result =
+      let piece_count_check_result_all        = Checker.check_piece_count r Checker.All       slices in
+      let piece_count_check_result_parity_buf = Checker.check_piece_count r Checker.ParityBuf slices in
+      let slices_check_result                 = Checker.check_slices_multi r slices in
+      match piece_count_check_result_all with
+      | Error _ as e -> e
+      | Ok _ ->
+        match piece_count_check_result_parity_buf with
+        | Error _ as e -> e
+        | Ok _ ->
+          match slices_check_result with
+          | Error _ as e -> e
+          | Ok _ ->
+            begin
+              let (data, to_check) = Helper.array_split_at slices r.data_shard_count in
+              Ok (check_some_slices_with_buffer
+                    r
+                    r.parity_rows
+                    data
+                    to_check
+                    buffer)
+            end
+
+    let verify
+        (r      : reed_solomon)
+        (slices : string array)
+      : (bool, error) result =
+      let piece_count_check_result   = Checker.check_piece_count r Checker.All   slices in
+      let slices_check_result        = Checker.check_slices_multi r slices in
+      match piece_count_check_result with
+      | Error _ as e -> e
+      | Ok _ ->
+        match slices_check_result with
+        | Error _ as e -> e
+        | Ok _ ->
+          begin
+            let buffer =
+              Helper.make_buffer r.parity_shard_count (String.length slices.(0)) in
+            verify_with_buffer
+              r
+              slices
+              buffer
+          end
   end
 
-  module BytesData = struct
+  module Bytes = struct
   end
 end
 
@@ -549,9 +607,9 @@ module Reconstruct = struct
    *   - check consistency of length of individual slices
    *   - check length of `slice_present` matches length of `slices` *)
 
-  module StringData = struct
+  module String = struct
   end
 
-  module BytesData = struct
+  module Bytes = struct
   end
 end
