@@ -348,6 +348,29 @@ module Encode = struct
                     single_data
                     parity)
             end
+
+    let encode_single
+        (r           : reed_solomon)
+        (i_data      : int)
+        (slices      : bytes array)
+      : (unit, error) result =
+      let index_check_result       = Checker.check_slice_index r Checker.Data i_data in
+      let piece_count_check_result = Checker.check_piece_count r Checker.All  slices in
+      let slices_check_result      = Checker.check_slices_multi r (Helper.bytes_array_to_string_array slices) in
+      match index_check_result with
+      | Error _ as e -> e
+      | Ok _ ->
+        match piece_count_check_result with
+        | Error _ as e -> e
+        | Ok _ ->
+          match slices_check_result with
+          | Error _ as e -> e
+          | Ok _ ->
+            begin
+              let output = Array.sub slices r.data_shard_count (Array.length slices) in
+              let input  = Bytes.unsafe_to_string slices.(i_data) in
+              encode_single_sep r i_data input output
+            end
   end
 
   module ByteInput = struct
