@@ -47,7 +47,8 @@
  *   This is not safe in general, but these calls are only
  *   used to generate parameters for tail calls to other
  *   functions in this library. So the biggest risk would be
- *   incorrect indexing, this is addressed by `Helper.array_split_at` *)
+ *   incorrect indexing, this is largely mitigated by
+ *   `Helper.array_split_at` *)
 
 open Tables
 open Ops
@@ -185,6 +186,10 @@ let check_some_slices_with_buffer
 module Helper = struct
   let bytes_array_to_string_array (arr : bytes array) : string array =
     Array.map Bytes.unsafe_to_string arr
+
+  let array_split_at (arr : 'a array) (split_at : int) : 'a array * 'a array =
+    (Array.sub arr 0        split_at,
+     Array.sub arr split_at (Array.length arr))
 end
 
 module Checker = struct
@@ -423,8 +428,9 @@ module Encode = struct
           | Error _ as e -> e
           | Ok _ ->
             begin
-              let output = Array.sub slices r.data_shard_count (Array.length slices) in
-              let input  = Bytes.unsafe_to_string slices.(i_data) in
+              let (input, output) =
+                Helper.array_split_at slices r.data_shard_count in
+              let input = (Helper.bytes_array_to_string_array input).(i_data) in
               encode_single_sep r i_data input output
             end
 
@@ -467,7 +473,9 @@ module Encode = struct
         | Error _ as e -> e
         | Ok _ ->
           begin
-            let input = Array.sub 
+            let (input, output) =
+              Helper.array_split_at slices r.data_shard_count in
+            encode_sep r (Helper.bytes_array_to_string_array input) output
           end
 
   end
