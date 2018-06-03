@@ -1,3 +1,31 @@
+(* AUDIT
+ *
+ * Use of Bytes.unsafe_to_string
+ *
+ *   Some functions make use of Bytes.unsafe_to_string
+ *
+ *   This is safe, however, as all use of Bytes.unsafe_to_string
+ *   are used internall and used in one direction only
+ *   i.e. only from bytes to string, never from string to bytes.
+ *
+ *   This means all functions already possess the mutable ownership
+ *   of data prior to generating an immutable ownership of data.
+ *
+ *   The overall scheme is heavily based on the ownership scheme in
+ *   the Rust version which makes use of immutable and mutable
+ *   references extensively to enforce safety.
+ *
+ *   The rough correspondence types to the Rust version is shown below
+ *     - string       -> &[u8]
+ *     - string array -> &[&[u8]]
+ *     - bytes        -> &mut [u8]
+ *     - bytes  array -> &mut [&mut [u8]]
+ *
+ *     It should be clear that the correspondence is not perfect as
+ *     OCaml does not have borrow checker, and thus cannot enforce
+ *     mutability constraints.
+ *)
+
 open Tables
 open Ops
 
