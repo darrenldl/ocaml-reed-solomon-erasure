@@ -107,19 +107,25 @@ let check_some_slices_with_buffer
     (r           : reed_solomon)
     (matrix_rows : bytes array)
     (inputs      : string array)
-    (to_check    : data array)
+    (to_check    : string array)
     (buffer      : bytes array)
   : bool =
   code_some_slices r matrix_rows inputs buffer;
 
-  let check_single i expected_parity_shard =
-    Data.eq (`Bytes expected_parity_shard) to_check.(i)
+  let check_single
+      (to_check              : string array)
+      (i                     : int)
+      (expected_parity_shard : bytes)
+    : bool =
+    Bytes.unsafe_to_string expected_parity_shard = to_check.(i)
   in
+
+  let check_single_partial = check_single to_check in
 
   let at_least_one_mismatch_present =
     Array.mem false
       (Array.mapi
-         check_single
+         check_single_partial
          buffer)
   in
 
