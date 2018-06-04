@@ -1,4 +1,8 @@
 # ocaml-reed-solomon-erasure
+
+## This project has been migrated to GitLab
+You can view the new project repo [here](https://gitlab.com/darrenldl/ocaml-reed-solomon-erasure)
+
 [Documentation](https://darrenldl.github.io/ocaml-reed-solomon-erasure/)
 
 OCaml implementation of Reed-Solomon erasure coding
